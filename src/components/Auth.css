@@ -1,0 +1,116 @@
+.bg-light-gray {
+  background-color: #fafafa;
+  min-height: 80vh;
+}
+
+/* Breadcrumb */
+.breadcrumb-container {
+  text-align: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #eaeaea;
+  font-size: 12px;
+  background-color: #fff;
+  text-transform: uppercase;
+}
+.breadcrumb-container a {
+  color: #666;
+  text-decoration: none;
+}
+.breadcrumb-container .active {
+  color: #333;
+  font-weight: bold;
+}
+.breadcrumb-container .separator {
+  margin: 0 10px;
+  color: #ccc;
+}
+
+/* Card Form */
+.auth-card {
+  background: #fff;
+  border: 1px solid #e1e1e1;
+  border-radius: 4px;
+  padding: 40px;
+}
+.auth-title {
+  font-family: serif; /* Font chữ giống mẫu */
+  font-weight: bold;
+  font-size: 26px;
+}
+
+/* Input Styles */
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+.form-control {
+  padding: 10px 15px;
+  font-size: 14px;
+  border-radius: 4px;
+}
+.form-control:focus {
+  border-color: #004d30;
+  box-shadow: 0 0 0 0.2rem rgba(0, 77, 48, 0.15);
+}
+
+/* Links */
+.form-links {
+  font-size: 14px;
+}
+.register-link {
+  color: #008f5d;
+  text-decoration: none;
+}
+.register-link:hover {
+  text-decoration: underline;
+}
+
+/* === NÚT XANH CHÍNH === */
+.btn-submit-auth {
+  background-color: #004d30 !important; /* Xanh lá đậm */
+  color: #fff !important;
+  font-weight: 600;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+.btn-submit-auth:hover {
+  background-color: #003320 !important;
+}
+
+/* Text phụ */
+.privacy-text {
+  font-size: 13px;
+  color: #777;
+}
+.border-top-dashed {
+  border-top: 1px dashed #ddd;
+}
+
+/* === NÚT MẠNG XÃ HỘI === */
+.social-login .btn {
+  font-size: 13px;
+  color: #fff !important;
+  border: none;
+  border-radius: 0px; /* Làm nút vuông vức giống mẫu */
+  padding: 8px 15px;
+  width: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-facebook {
+  background-color: #3b5998 !important; /* Màu xanh Facebook */
+}
+.btn-facebook:hover {
+  background-color: #2d4373 !important;
+}
+.btn-google {
+  background-color: #dd4b39 !important; /* Màu đỏ Google */
+}
+.btn-google:hover {
+  background-color: #c23321 !important;
+}

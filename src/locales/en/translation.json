@@ -1,0 +1,23 @@
+{
+  "header": {
+    "search_placeholder": "Search in Home Living",
+    "sales": "Sales",
+    "system": "System",
+    "hello": "Hello,",
+    "account_info": "Account Information",
+    "my_orders": "My Orders",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "product_category": "Categories",
+    "all_products": "All Products",
+    "home": "Home",
+    "flash_sale": "Flash Sale",
+    "products": "Products",
+    "news": "News",
+    "intro": "About Us",
+    "contact": "Contact",
+    "stores": "Store Locations",
+    "guide": "Guide"
+  }
+}

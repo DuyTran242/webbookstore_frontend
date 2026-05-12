@@ -1,0 +1,60 @@
+/* Bao phủ toàn màn hình với nền màu xám nhạt */
+.admin-login-container {
+  min-height: 100vh;
+  background-color: #f4f6f9;
+  padding: 20px;
+}
+
+/* Khung Card chứa form và ảnh */
+.admin-login-card {
+  width: 100%;
+  max-width: 900px;
+  border-radius: 15px;
+  min-height: 500px;
+}
+
+/* Phần ảnh bên trái */
+.admin-login-image {
+  flex: 1;
+  /* Sử dụng một ảnh nội thất đẹp từ Unsplash làm hình nền mặc định */
+  background: url('https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80') center/cover no-repeat;
+  position: relative;
+}
+
+/* Lớp phủ đen mờ trên ảnh để chữ dễ đọc */
+.image-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 88, 59, 0.7); /* Màu xanh lá chuẩn của brand + độ trong suốt */
+}
+
+/* Phần form bên phải */
+.admin-login-form {
+  flex: 1;
+  max-width: 450px;
+}
+
+/* CSS cho input để bỏ viền xanh mặc định của Bootstrap khi focus */
+.admin-login-form .form-control:focus {
+  box-shadow: none;
+  border-color: #ced4da;
+}
+
+.admin-login-form .input-group-text,
+.admin-login-form .form-control {
+  border-radius: 8px;
+  padding: 12px 15px;
+}
+
+/* Hiệu ứng hover cho nút button */
+.admin-login-form button:hover {
+  background-color: #00422c !important;
+  transition: all 0.3s ease;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .admin-login-form {
+    max-width: 100%;
+  }
+}

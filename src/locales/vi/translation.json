@@ -1,0 +1,23 @@
+{
+  "header": {
+    "search_placeholder": "Tìm kiếm trong Home Living",
+    "sales": "Bán hàng",
+    "system": "Hệ thống",
+    "hello": "Xin chào,",
+    "account_info": "Thông tin tài khoản",
+    "my_orders": "Đơn mua của tôi",
+    "logout": "Đăng xuất",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "product_category": "Danh mục sản phẩm",
+    "all_products": "Tất cả sản phẩm",
+    "home": "Trang chủ",
+    "flash_sale": "Flash Sale",
+    "products": "Sản phẩm",
+    "news": "Tin tức",
+    "intro": "Giới thiệu",
+    "contact": "Liên hệ",
+    "stores": "Hệ thống cửa hàng",
+    "guide": "Hướng dẫn"
+  }
+}

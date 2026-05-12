@@ -1,0 +1,135 @@
+/* =========================================
+   1. OVERLAY (LỚP PHỦ ĐEN MỜ)
+========================================= */
+.cart-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px); /* Làm mờ nhẹ nền phía sau */
+  z-index: 1040;
+  
+  /* Hiệu ứng ẩn/hiện mượt mà */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
+
+.cart-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  cursor: pointer;
+}
+
+/* =========================================
+   2. CART DRAWER (MENU TRƯỢT TỪ PHẢI SANG)
+========================================= */
+.cart-drawer {
+  position: fixed;
+  top: 0;
+  right: -450px; /* Ẩn ra ngoài màn hình */
+  width: 400px;
+  max-width: 100vw; /* Đảm bảo không bị tràn trên màn hình điện thoại */
+  height: 100vh;
+  background-color: #ffffff;
+  box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  
+  /* Hiệu ứng trượt với gia tốc (cubic-bezier) giúp chuyển động tự nhiên hơn */
+  transition: right 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.cart-drawer.open {
+  right: 0;
+}
+
+/* =========================================
+   3. CART BODY (KHU VỰC CHỨA SẢN PHẨM)
+========================================= */
+.cart-body {
+  flex-grow: 1;
+  padding-bottom: 20px;
+}
+
+/* Tùy chỉnh thanh cuộn (Scrollbar) cho đẹp và tinh tế hơn */
+.cart-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.cart-body::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+.cart-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.cart-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* =========================================
+   4. HIỆU ỨNG HOVER (TƯƠNG TÁC)
+========================================= */
+/* Nút Đóng (X) */
+.cart-drawer .btn i.fa-xmark {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.cart-drawer .btn:hover i.fa-xmark {
+  color: #dc3545 !important;
+  transform: rotate(90deg); /* Hiệu ứng xoay nhẹ khi chỉ chuột vào */
+}
+
+/* Item sản phẩm trong giỏ */
+.cart-drawer .border.rounded {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: #fff;
+}
+
+.cart-drawer .border.rounded:hover {
+  border-color: #0f4f34 !important; /* Đổi màu viền sang xanh của thương hiệu */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Nút xóa sản phẩm (Thùng rác) */
+.cart-drawer .btn-link.text-danger {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  opacity: 0.6;
+}
+
+.cart-drawer .btn-link.text-danger:hover {
+  opacity: 1;
+  transform: scale(1.15); /* Phóng to nhẹ thùng rác */
+}
+
+/* Nút tăng giảm số lượng (+ / -) */
+.cart-drawer .bg-light button {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.cart-drawer .bg-light button:hover {
+  background-color: #e2e6ea;
+  color: #000 !important;
+}
+
+/* Nút THANH TOÁN */
+.cart-drawer .btn[style*="background-color: #0f4f34"] {
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease !important;
+}
+
+.cart-drawer .btn[style*="background-color: #0f4f34"]:hover {
+  background-color: #0b3b27 !important; /* Xanh đậm hơn khi hover */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(15, 79, 52, 0.3);
+}
+
+.cart-drawer .btn[style*="background-color: #0f4f34"]:active {
+  transform: translateY(0);
+  box-shadow: none;
+}

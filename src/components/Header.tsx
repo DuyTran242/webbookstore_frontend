@@ -99,7 +99,7 @@ const Header = () => {
           {/* Logo */}
           <div className="col-lg-2 col-md-3">
             <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <h1 className="logo-text m-0">HOME<span>LIVING</span></h1>
+              <h1 className="logo-text m-0">BOOK<span>STORE</span></h1>
             </Link>
           </div>
 

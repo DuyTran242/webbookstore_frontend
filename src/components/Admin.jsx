@@ -39,7 +39,7 @@ const Admin = () => {
           </div>
           <div>
             <h6 className="m-0 fw-bold text-dark" style={{ fontSize: '15px' }}>Admin</h6>
-            <small className="text-muted" style={{ fontSize: '11px' }}>Home Living</small>
+            <small className="text-muted" style={{ fontSize: '11px' }}>Bookstore</small>
           </div>
         </div>
 

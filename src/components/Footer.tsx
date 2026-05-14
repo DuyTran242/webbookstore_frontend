@@ -5,7 +5,7 @@ const Footer = () => {
   return (
     <footer className="wolfbed-footer pt-5 pb-3">
       <div className="container text-center text-white mb-5">
-        <h4 className="fw-bold mb-3">Home Living</h4>
+        <h4 className="fw-bold mb-3">Bookstore</h4>
         <p className="footer-intro mx-auto" style={{ maxWidth: '800px' }}>
           Mua Đệm, Chăn ga gối & Phụ kiện chính hãng đến ngay Wolf Bed. Tư vấn cá nhân hoá, Nằm thử 120 đêm, 
           Đổi trả dễ, Giao tận nơi, Giá ưu đãi, Hỗ trợ trả góp 0%!
@@ -121,7 +121,7 @@ const Footer = () => {
         <div className="container">
           <div className="row align-items-center">
             <div className="col-md-9">
-              <p className="mb-1 small">© Bản quyền thuộc về <strong>DuyIT</strong>. Cung cấp bởi DuyIT</p>
+              <p className="mb-1 small">© Bản quyền thuộc về <strong>Bookstore</strong>. Cung cấp bởi Bookstore</p>
               <p className="mb-0 x-small text-muted">Mã số Doanh nghiệp: 0314314314 do Sở Kế hoạch & Đầu tư TP Hồ Chí Minh cấp ngày 24/06/2025</p>
             </div>
             <div className="col-md-3 text-end">

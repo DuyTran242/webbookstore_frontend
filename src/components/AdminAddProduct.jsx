@@ -1,91 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const AdminAddProduct = ({ setActiveTab }) => {
   const [loading, setLoading] = useState(false);
-  
-  // State lưu thông tin text của Form
+  const [categories, setCategories] = useState([]);
+
   const [formData, setFormData] = useState({
     name: '',
-    brand: '',
-    color: '',
+    brand: '',       // Tác giả
+    color: '',       // Ngôn ngữ
     description: '',
-    material: '',
+    material: '',    // Nhà xuất bản
     price: '',
     stockQuantity: '',
-    categoryId: 1, // Mặc định tạm là 1
+    categoryId: '',
     status: 1,
-    weight: ''
+    weight: ''       // Khối lượng (gram)
   });
 
-  // State lưu danh sách ảnh (bao gồm base64 string và cờ isPrimary)
   const [images, setImages] = useState([]);
 
-  // Xử lý thay đổi input text
+  // Lấy danh sách danh mục để chọn
+  useEffect(() => {
+    fetch('http://localhost:8080/api/categories')
+        .then(res => res.json())
+        .then(data => setCategories(data))
+        .catch(err => console.error('Lỗi lấy danh mục:', err));
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  // Xử lý upload và convert ảnh sang Base64
+  // Upload và convert ảnh sang Base64
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    
     files.forEach((file) => {
+      // Kiểm tra kích thước file (tối đa 2MB mỗi ảnh)
+      if (file.size > 2 * 1024 * 1024) {
+        alert(`Ảnh "${file.name}" quá lớn (tối đa 2MB). Vui lòng chọn ảnh khác!`);
+        return;
+      }
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onloadend = () => {
-        const base64String = reader.result;
         setImages(prev => {
-          // Nếu là ảnh đầu tiên được tải lên, tự động set làm ảnh chính
-          const isFirstImage = prev.length === 0;
-          return [...prev, { imageUrl: base64String, isPrimary: isFirstImage ? 1 : 0 }];
+          const isFirst = prev.length === 0;
+          return [...prev, { imageUrl: reader.result, isPrimary: isFirst ? 1 : 0 }];
         });
       };
     });
   };
 
-  // Set ảnh chính
   const setPrimaryImage = (index) => {
-    const updatedImages = images.map((img, i) => ({
-      ...img,
-      isPrimary: i === index ? 1 : 0
-    }));
-    setImages(updatedImages);
+    setImages(images.map((img, i) => ({ ...img, isPrimary: i === index ? 1 : 0 })));
   };
 
-  // Xóa ảnh khỏi danh sách
   const removeImage = (index) => {
     const newImages = images.filter((_, i) => i !== index);
-    // Nếu xóa mất ảnh chính, tự động lấy ảnh đầu tiên làm ảnh chính
     if (images[index].isPrimary === 1 && newImages.length > 0) {
       newImages[0].isPrimary = 1;
     }
     setImages(newImages);
   };
 
-  // Submit Form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (images.length === 0) {
-      alert("Vui lòng tải lên ít nhất 1 hình ảnh!");
-      return;
-    }
+
+    // Validation
+    if (!formData.name.trim()) { alert('Vui lòng nhập tên sách!'); return; }
+    if (!formData.price || parseFloat(formData.price) <= 0) { alert('Vui lòng nhập giá hợp lệ!'); return; }
+    if (!formData.stockQuantity || parseInt(formData.stockQuantity) < 0) { alert('Vui lòng nhập số lượng hợp lệ!'); return; }
+    if (!formData.categoryId) { alert('Vui lòng chọn danh mục!'); return; }
+    if (images.length === 0) { alert('Vui lòng tải lên ít nhất 1 hình ảnh bìa sách!'); return; }
 
     setLoading(true);
 
-    // Ghép formData và images thành 1 payload (DTO)
     const payload = {
-      name: formData.name,
-      brand: formData.brand,
-      color: formData.color,
-      description: formData.description,
-      material: formData.material,
+      name: formData.name.trim(),
+      brand: formData.brand.trim(),       // Tác giả
+      color: formData.color.trim(),       // Ngôn ngữ
+      description: formData.description.trim(),
+      material: formData.material.trim(), // Nhà xuất bản
       price: parseFloat(formData.price),
       stockQuantity: parseInt(formData.stockQuantity),
       categoryId: parseInt(formData.categoryId),
       status: parseInt(formData.status),
-      weight: parseFloat(formData.weight),
-      images: images // Đã có dạng [{imageUrl: "base64...", isPrimary: 1}]
+      weight: formData.weight ? parseFloat(formData.weight) : null,
+      images: images
     };
 
     try {
@@ -96,157 +98,267 @@ const AdminAddProduct = ({ setActiveTab }) => {
       });
 
       if (response.ok) {
-        alert("Thêm sản phẩm thành công!");
-        // Trở về tab Danh sách sản phẩm (Component AdminProduct sẽ tự động reload API để hiển thị sản phẩm mới lên đầu)
-        setActiveTab('products'); 
+        alert('Thêm sách mới thành công!');
+        setActiveTab('products');
       } else {
         const err = await response.text();
-        alert("Lỗi: " + err);
+        alert('Lỗi: ' + err);
       }
     } catch (error) {
-      console.error("Lỗi kết nối:", error);
-      alert("Lỗi kết nối đến máy chủ!");
+      console.error('Lỗi kết nối:', error);
+      alert('Lỗi kết nối đến máy chủ!');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="admin-content p-4 w-100">
-      {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div className="d-flex align-items-center gap-3">
-          <button 
-            className="btn btn-light shadow-sm border" 
-            onClick={() => setActiveTab('products')}
-            title="Quay lại"
+      <div className="admin-content p-4 w-100">
+        {/* Header */}
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div className="d-flex align-items-center gap-3">
+            <button className="btn btn-light shadow-sm border" onClick={() => setActiveTab('products')}>
+              <i className="fa-solid fa-arrow-left"></i>
+            </button>
+            <div>
+              <h4 className="fw-bold m-0" style={{ color: '#00583b' }}>Thêm Sách Mới</h4>
+              <small className="text-muted">Nhập thông tin và hình ảnh bìa sách</small>
+            </div>
+          </div>
+          <button
+              className="btn text-white fw-bold px-4 py-2"
+              style={{ backgroundColor: '#00583b', borderRadius: '8px' }}
+              onClick={handleSubmit}
+              disabled={loading}
           >
-            <i className="fa-solid fa-arrow-left"></i>
+            {loading
+                ? <><span className="spinner-border spinner-border-sm me-2"></span>Đang lưu...</>
+                : <><i className="fa-solid fa-floppy-disk me-2"></i>Lưu Sách</>
+            }
           </button>
-          <div>
-            <h4 className="fw-bold m-0" style={{ color: '#00583b' }}>Thêm Sản Phẩm Mới</h4>
-            <small className="text-muted">Nhập thông tin và hình ảnh cho sản phẩm</small>
-          </div>
-        </div>
-        <button 
-          className="btn text-white fw-bold px-4 py-2" 
-          style={{ backgroundColor: '#00583b', borderRadius: '8px' }}
-          onClick={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? 'Đang lưu...' : 'Lưu Sản Phẩm'}
-        </button>
-      </div>
-
-      <div className="row g-4">
-        {/* CỘT TRÁI: THÔNG TIN CƠ BẢN */}
-        <div className="col-lg-8">
-          <div className="bg-white p-4 rounded-3 shadow-sm mb-4">
-            <h6 className="fw-bold mb-3 border-bottom pb-2">Thông tin chung</h6>
-            
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Tên sản phẩm <span className="text-danger">*</span></label>
-              <input type="text" className="form-control bg-light" name="name" value={formData.name} onChange={handleInputChange} required placeholder="VD: Ghế Sofa Phòng Khách..." />
-            </div>
-
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label fw-semibold">Thương hiệu</label>
-                <input type="text" className="form-control bg-light" name="brand" value={formData.brand} onChange={handleInputChange} placeholder="VD: HomeDecor" />
-              </div>
-              <div className="col-md-6 mb-3">
-                <label className="form-label fw-semibold">Danh mục (Category ID)</label>
-                <input type="number" className="form-control bg-light" name="categoryId" value={formData.categoryId} onChange={handleInputChange} />
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Mô tả sản phẩm</label>
-              <textarea className="form-control bg-light" name="description" rows="4" value={formData.description} onChange={handleInputChange} placeholder="Nhập chi tiết mô tả..."></textarea>
-            </div>
-          </div>
-
-          {/* THÔNG TIN CHI TIẾT */}
-          <div className="bg-white p-4 rounded-3 shadow-sm">
-            <h6 className="fw-bold mb-3 border-bottom pb-2">Thuộc tính chi tiết</h6>
-            <div className="row">
-              <div className="col-md-4 mb-3">
-                <label className="form-label fw-semibold">Chất liệu</label>
-                <input type="text" className="form-control bg-light" name="material" value={formData.material} onChange={handleInputChange} placeholder="VD: Gỗ, Vải nỉ..." />
-              </div>
-              <div className="col-md-4 mb-3">
-                <label className="form-label fw-semibold">Màu sắc</label>
-                <input type="text" className="form-control bg-light" name="color" value={formData.color} onChange={handleInputChange} placeholder="VD: Xanh lam" />
-              </div>
-              <div className="col-md-4 mb-3">
-                <label className="form-label fw-semibold">Khối lượng (kg)</label>
-                <input type="number" step="0.1" className="form-control bg-light" name="weight" value={formData.weight} onChange={handleInputChange} placeholder="0.0" />
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* CỘT PHẢI: GIÁ, TỒN KHO & HÌNH ẢNH */}
-        <div className="col-lg-4">
-          <div className="bg-white p-4 rounded-3 shadow-sm mb-4">
-            <h6 className="fw-bold mb-3 border-bottom pb-2">Giá & Tồn kho</h6>
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Giá bán (VNĐ) <span className="text-danger">*</span></label>
-              <input type="number" className="form-control bg-light text-danger fw-bold" name="price" value={formData.price} onChange={handleInputChange} required placeholder="0" />
+        <div className="row g-4">
+          {/* CỘT TRÁI: THÔNG TIN SÁCH */}
+          <div className="col-lg-8">
+
+            {/* Thông tin chung */}
+            <div className="bg-white p-4 rounded-3 shadow-sm mb-4">
+              <h6 className="fw-bold mb-3 pb-2 border-bottom">
+                <i className="fa-solid fa-book me-2 text-success"></i>Thông tin sách
+              </h6>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold">
+                  Tên sách <span className="text-danger">*</span>
+                </label>
+                <input
+                    type="text"
+                    className="form-control bg-light"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="VD: Đắc Nhân Tâm, Nhà Giả Kim..."
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-semibold">Mô tả / Giới thiệu sách</label>
+                <textarea
+                    className="form-control bg-light"
+                    name="description"
+                    rows="4"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Tóm tắt nội dung, đánh giá ngắn về cuốn sách..."
+                ></textarea>
+              </div>
+
+              <div className="row">
+                <div className="col-md-6 mb-3">
+                  <label className="form-label fw-semibold">Danh mục <span className="text-danger">*</span></label>
+                  <select
+                      className="form-select bg-light"
+                      name="categoryId"
+                      value={formData.categoryId}
+                      onChange={handleInputChange}
+                  >
+                    <option value="">-- Chọn danh mục --</option>
+                    {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-md-6 mb-3">
+                  <label className="form-label fw-semibold">Trạng thái</label>
+                  <select className="form-select bg-light" name="status" value={formData.status} onChange={handleInputChange}>
+                    <option value={1}>Đang bán</option>
+                    <option value={0}>Ngừng bán</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Số lượng tồn kho <span className="text-danger">*</span></label>
-              <input type="number" className="form-control bg-light" name="stockQuantity" value={formData.stockQuantity} onChange={handleInputChange} required placeholder="0" />
-            </div>
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Trạng thái</label>
-              <select className="form-select bg-light" name="status" value={formData.status} onChange={handleInputChange}>
-                <option value={1}>Đang bán (Active)</option>
-                <option value={0}>Ẩn (Inactive)</option>
-              </select>
+
+            {/* Thuộc tính chi tiết */}
+            <div className="bg-white p-4 rounded-3 shadow-sm">
+              <h6 className="fw-bold mb-3 pb-2 border-bottom">
+                <i className="fa-solid fa-circle-info me-2 text-info"></i>Thông tin chi tiết
+              </h6>
+              <div className="row">
+                <div className="col-md-6 mb-3">
+                  <label className="form-label fw-semibold">Tác giả</label>
+                  <input
+                      type="text"
+                      className="form-control bg-light"
+                      name="brand"
+                      value={formData.brand}
+                      onChange={handleInputChange}
+                      placeholder="VD: Dale Carnegie, Paulo Coelho..."
+                  />
+                </div>
+                <div className="col-md-6 mb-3">
+                  <label className="form-label fw-semibold">Nhà xuất bản</label>
+                  <input
+                      type="text"
+                      className="form-control bg-light"
+                      name="material"
+                      value={formData.material}
+                      onChange={handleInputChange}
+                      placeholder="VD: NXB Trẻ, NXB Kim Đồng..."
+                  />
+                </div>
+                <div className="col-md-6 mb-3">
+                  <label className="form-label fw-semibold">Ngôn ngữ</label>
+                  <input
+                      type="text"
+                      className="form-control bg-light"
+                      name="color"
+                      value={formData.color}
+                      onChange={handleInputChange}
+                      placeholder="VD: Tiếng Việt, English..."
+                  />
+                </div>
+                <div className="col-md-6 mb-3">
+                  <label className="form-label fw-semibold">Khối lượng (gram)</label>
+                  <input
+                      type="number"
+                      step="1"
+                      className="form-control bg-light"
+                      name="weight"
+                      value={formData.weight}
+                      onChange={handleInputChange}
+                      placeholder="VD: 350"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* QUẢN LÝ HÌNH ẢNH */}
-          <div className="bg-white p-4 rounded-3 shadow-sm">
-            <h6 className="fw-bold mb-3 border-bottom pb-2">Hình ảnh sản phẩm</h6>
-            
-            {/* Nút upload file */}
-            <div className="mb-3">
-              <label className="btn btn-outline-success w-100 border-dashed py-3" style={{ borderStyle: 'dashed' }}>
-                <i className="fa-solid fa-cloud-arrow-up fs-4 mb-2 d-block"></i>
-                <span className="fw-bold">Click để tải ảnh lên</span>
+          {/* CỘT PHẢI: GIÁ, TỒN KHO & BÌA SÁCH */}
+          <div className="col-lg-4">
+
+            {/* Giá & Tồn kho */}
+            <div className="bg-white p-4 rounded-3 shadow-sm mb-4">
+              <h6 className="fw-bold mb-3 pb-2 border-bottom">
+                <i className="fa-solid fa-tags me-2 text-warning"></i>Giá & Tồn kho
+              </h6>
+              <div className="mb-3">
+                <label className="form-label fw-semibold">
+                  Giá bán (VNĐ) <span className="text-danger">*</span>
+                </label>
+                <input
+                    type="number"
+                    className="form-control bg-light fw-bold text-danger"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    placeholder="0"
+                    min="0"
+                />
+              </div>
+              <div className="mb-3">
+                <label className="form-label fw-semibold">
+                  Số lượng tồn kho <span className="text-danger">*</span>
+                </label>
+                <input
+                    type="number"
+                    className="form-control bg-light"
+                    name="stockQuantity"
+                    value={formData.stockQuantity}
+                    onChange={handleInputChange}
+                    placeholder="0"
+                    min="0"
+                />
+              </div>
+            </div>
+
+            {/* Hình ảnh bìa sách */}
+            <div className="bg-white p-4 rounded-3 shadow-sm">
+              <h6 className="fw-bold mb-3 pb-2 border-bottom">
+                <i className="fa-solid fa-image me-2 text-primary"></i>Hình ảnh bìa sách
+              </h6>
+
+              <label
+                  className="d-flex flex-column align-items-center justify-content-center w-100 p-3 mb-3 rounded-3 text-center"
+                  style={{ border: '2px dashed #00583b', cursor: 'pointer', backgroundColor: '#f0faf5' }}
+              >
+                <i className="fa-solid fa-cloud-arrow-up fa-2x mb-2 text-success"></i>
+                <span className="fw-bold text-success small">Click để tải ảnh bìa lên</span>
+                <span className="text-muted" style={{ fontSize: '11px' }}>PNG, JPG — tối đa 2MB/ảnh</span>
                 <input type="file" multiple accept="image/*" className="d-none" onChange={handleImageUpload} />
               </label>
-            </div>
 
-            {/* Hiển thị danh sách ảnh preview */}
-            <div className="d-flex flex-column gap-2">
-              {images.map((img, index) => (
-                <div key={index} className={`d-flex align-items-center justify-content-between p-2 border rounded ${img.isPrimary === 1 ? 'border-success bg-light' : ''}`}>
-                  <div className="d-flex align-items-center gap-2">
-                    <img src={img.imageUrl} alt="preview" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
-                    {img.isPrimary === 1 && <span className="badge bg-success" style={{ fontSize: '10px' }}>Ảnh chính</span>}
-                  </div>
-                  
-                  <div className="d-flex gap-1">
-                    {img.isPrimary === 0 && (
-                      <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => setPrimaryImage(index)} title="Đặt làm ảnh chính">
-                        <i className="fa-solid fa-star"></i>
-                      </button>
-                    )}
-                    <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => removeImage(index)} title="Xóa ảnh">
-                      <i className="fa-solid fa-trash"></i>
-                    </button>
-                  </div>
-                </div>
-              ))}
+              {/* Preview ảnh */}
+              <div className="d-flex flex-column gap-2">
+                {images.map((img, index) => (
+                    <div
+                        key={index}
+                        className={`d-flex align-items-center justify-content-between p-2 rounded-2 border ${img.isPrimary === 1 ? 'border-success bg-light' : 'border-light-subtle'}`}
+                    >
+                      <div className="d-flex align-items-center gap-2">
+                        <img
+                            src={img.imageUrl}
+                            alt="preview"
+                            style={{ width: '40px', height: '55px', objectFit: 'cover', borderRadius: '3px' }}
+                        />
+                        <div>
+                          {img.isPrimary === 1
+                              ? <span className="badge bg-success" style={{ fontSize: '10px' }}>Ảnh bìa chính</span>
+                              : <span className="text-muted" style={{ fontSize: '11px' }}>Ảnh phụ</span>
+                          }
+                        </div>
+                      </div>
+                      <div className="d-flex gap-1">
+                        {img.isPrimary !== 1 && (
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-success"
+                                onClick={() => setPrimaryImage(index)}
+                                title="Đặt làm ảnh bìa chính"
+                            >
+                              <i className="fa-solid fa-star" style={{ fontSize: '11px' }}></i>
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => removeImage(index)}
+                            title="Xóa ảnh"
+                        >
+                          <i className="fa-solid fa-trash" style={{ fontSize: '11px' }}></i>
+                        </button>
+                      </div>
+                    </div>
+                ))}
+              </div>
+
+              {images.length === 0 && (
+                  <p className="text-muted text-center small mt-2 fst-italic">Chưa có ảnh nào được chọn</p>
+              )}
             </div>
           </div>
         </div>
-
       </div>
-    </div>
   );
 };
 

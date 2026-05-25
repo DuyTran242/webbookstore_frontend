@@ -6,7 +6,8 @@ import AdminAddProduct from './AdminAddProduct';
 import AdminEditProduct from './AdminEditProduct';
 import AdminUser from './AdminUser';
 import AdminCategory from './AdminCategory';
-import AdminInventory from './AdminInventory';   // <-- THÊM IMPORT NÀY
+import AdminInventory from './AdminInventory';
+import AdminOrders from './AdminOrders';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ const Admin = () => {
   const menuItems = [
     { key: 'dashboard', icon: 'fa-table-cells-large', label: 'Dashboard' },
     { key: 'products',  icon: 'fa-book',              label: 'Sách',       also: ['add_product', 'edit_product'] },
-    { key: 'orders',    icon: 'fa-cart-shopping',     label: 'Đơn hàng' },
+    { key: 'orders',    icon: 'fa-receipt',     label: 'Đơn hàng' },
     { key: 'users',     icon: 'fa-users',             label: 'Người dùng' },
     { key: 'inventory', icon: 'fa-warehouse',    label: 'Tồn kho' },
     { key: 'categories',icon: 'fa-list',              label: 'Danh mục' },
@@ -158,6 +159,10 @@ const Admin = () => {
           )}
 
           {/* Quản lý người dùng — ĐÃ THÊM */}
+          {activeTab === 'orders' && (
+              <AdminOrders />
+          )}
+
           {activeTab === 'inventory' && (
               <AdminInventory />
           )}
@@ -171,7 +176,7 @@ const Admin = () => {
           )}
 
           {/* Các tab chưa làm */}
-          {['orders', 'reviews', 'coupons', 'banners'].includes(activeTab) && (
+          {['reviews', 'coupons', 'banners'].includes(activeTab) && (
               <div className="p-4">
                 <div className="bg-white rounded-3 shadow-sm p-5 text-center">
                   <i className="fa-solid fa-wrench fa-3x text-muted mb-3 d-block"></i>

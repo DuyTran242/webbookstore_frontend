@@ -8,6 +8,7 @@ import AdminUser from './AdminUser';
 import AdminCategory from './AdminCategory';
 import AdminInventory from './AdminInventory';
 import AdminOrders from './AdminOrders';
+import AdminReviews from './AdminReviews';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -175,8 +176,12 @@ const Admin = () => {
               <AdminUser />
           )}
 
+          {activeTab === 'reviews' && (
+              <AdminReviews />
+          )}
+
           {/* Các tab chưa làm */}
-          {['reviews', 'coupons', 'banners'].includes(activeTab) && (
+          {['coupons', 'banners'].includes(activeTab) && (
               <div className="p-4">
                 <div className="bg-white rounded-3 shadow-sm p-5 text-center">
                   <i className="fa-solid fa-wrench fa-3x text-muted mb-3 d-block"></i>

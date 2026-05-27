@@ -9,6 +9,7 @@ import AdminCategory from './AdminCategory';
 import AdminInventory from './AdminInventory';
 import AdminOrders from './AdminOrders';
 import AdminReviews from './AdminReviews';
+import AdminDashboard from './AdminDashboard';   // <-- THÊM IMPORT NÀY
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -122,6 +123,10 @@ const Admin = () => {
 
           {/* Dashboard */}
           {activeTab === 'dashboard' && (
+              <AdminDashboard />
+          )}
+
+          {activeTab === 'dashboard_old' && (
               <div className="p-4">
                 <h4 className="fw-bold mb-4" style={{ color: '#00583b' }}>Tổng quan hệ thống</h4>
                 <div className="row g-4">

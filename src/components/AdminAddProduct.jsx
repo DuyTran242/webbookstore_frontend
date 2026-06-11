@@ -146,13 +146,13 @@ const AdminAddProduct = ({ setActiveTab }) => {
             
             <div className="mb-3">
               <label className="form-label fw-semibold">Tên sản phẩm <span className="text-danger">*</span></label>
-              <input type="text" className="form-control bg-light" name="name" value={formData.name} onChange={handleInputChange} required placeholder="VD: Ghế Sofa Phòng Khách..." />
+              <input type="text" className="form-control bg-light" name="name" value={formData.name} onChange={handleInputChange} required placeholder="VD: Sách toán, vật lý..." />
             </div>
 
             <div className="row">
               <div className="col-md-6 mb-3">
                 <label className="form-label fw-semibold">Thương hiệu</label>
-                <input type="text" className="form-control bg-light" name="brand" value={formData.brand} onChange={handleInputChange} placeholder="VD: HomeDecor" />
+                <input type="text" className="form-control bg-light" name="brand" value={formData.brand} onChange={handleInputChange} placeholder="VD: Vina Book..." />
               </div>
               <div className="col-md-6 mb-3">
                 <label className="form-label fw-semibold">Danh mục (Category ID)</label>
@@ -172,7 +172,7 @@ const AdminAddProduct = ({ setActiveTab }) => {
             <div className="row">
               <div className="col-md-4 mb-3">
                 <label className="form-label fw-semibold">Chất liệu</label>
-                <input type="text" className="form-control bg-light" name="material" value={formData.material} onChange={handleInputChange} placeholder="VD: Gỗ, Vải nỉ..." />
+                <input type="text" className="form-control bg-light" name="material" value={formData.material} onChange={handleInputChange} placeholder="VD: Giấy loại 1, 2..." />
               </div>
               <div className="col-md-4 mb-3">
                 <label className="form-label fw-semibold">Màu sắc</label>

@@ -2,8 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Admin.css';
 import AdminProduct from './AdminProduct';
-import AdminAddProduct from './AdminAddProduct'; // <--- IMPORT COMPONENT THÊM SẢN PHẨM
-import AdminEditProduct from './AdminEditProduct'; // <--- IMPORT COMPONENT SỬA SẢN PHẨM
+import AdminAddProduct from './AdminAddProduct';
+import AdminEditProduct from './AdminEditProduct';
+import AdminOrder from './AdminOrder';
+import AdminUser from './AdminUser';
+import AdminCategories from './AdminCategories';
+import AdminBrand from './AdminBrand';
+import AdminStockQuantity from './AdminStockQuantity';
+
+// --- IMPORT 3 COMPONENT MỚI CHO LUỒNG IMEI VÀ BẢO HÀNH ---
+import AdminImportSerials from './AdminImportSerials';
+import AdminWarranty from './AdminWarranty';
+import AdminOrderPacking from './AdminOrderPacking';
+
+
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -11,7 +23,10 @@ const Admin = () => {
   
   // STATE ĐỂ QUẢN LÝ TAB ĐANG ACTIVE VÀ ID SẢN PHẨM CẦN SỬA
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [editProductId, setEditProductId] = useState(null); // <--- THÊM STATE NÀY
+  const [editProductId, setEditProductId] = useState(null);
+
+  // --- THÊM STATE NÀY ĐỂ QUẢN LÝ ID ĐƠN HÀNG KHI CHUYỂN SANG TRANG ĐÓNG GÓI ---
+  const [packOrderId, setPackOrderId] = useState(null);
 
   useEffect(() => {
     const sessionStr = localStorage.getItem('adminSession');
@@ -39,7 +54,7 @@ const Admin = () => {
           </div>
           <div>
             <h6 className="m-0 fw-bold text-dark" style={{ fontSize: '15px' }}>Admin</h6>
-            <small className="text-muted" style={{ fontSize: '11px' }}>Home Living</small>
+            <small className="text-muted" style={{ fontSize: '11px' }}>BOOK STORE</small>
           </div>
         </div>
 
@@ -54,7 +69,6 @@ const Admin = () => {
           </li>
           
           <li 
-            // CẬP NHẬT: Thêm điều kiện activeTab === 'edit_product' để giữ tab Sáng khi đang sửa
             className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${(activeTab === 'products' || activeTab === 'add_product' || activeTab === 'edit_product') ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
             onClick={() => setActiveTab('products')}
             style={{ cursor: 'pointer' }}
@@ -82,7 +96,7 @@ const Admin = () => {
           </li>
 
           <li 
-            className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${activeTab === 'orders' ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
+            className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${(activeTab === 'orders' || activeTab === 'pack_order') ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
             onClick={() => setActiveTab('orders')}
             style={{ cursor: 'pointer' }}
           >
@@ -250,14 +264,28 @@ const Admin = () => {
           </div>
         )}
 
-        {/* TRUYỀN setActiveTab XUỐNG ĐỂ COMPONENT CÓ THỂ ĐIỀU HƯỚNG VÀ setEditProductId ĐỂ LẤY ID */}
+        {/* CÁC COMPONENT QUẢN LÝ SẢN PHẨM */}
         {activeTab === 'products' && <AdminProduct setActiveTab={setActiveTab} setEditProductId={setEditProductId} />}
-        
-        {/* COMPONENT THÊM SẢN PHẨM MỚI */}
         {activeTab === 'add_product' && <AdminAddProduct setActiveTab={setActiveTab} />}
-
-        {/* COMPONENT SỬA SẢN PHẨM MỚI THÊM VÀO */}
         {activeTab === 'edit_product' && <AdminEditProduct setActiveTab={setActiveTab} productId={editProductId} />}
+        
+        {/* CẬP NHẬT TRUYỀN PROPS CHO ADMIN ORDER ĐỂ CHUYỂN SANG ĐÓNG GÓI */}
+        {activeTab === 'orders' && <AdminOrder setActiveTab={setActiveTab} setPackOrderId={setPackOrderId} />}
+        
+        {/* CÁC COMPONENT DANH MỤC KHÁC */}
+        {activeTab === 'users' && <AdminUser />}
+        {activeTab === 'categories' && <AdminCategories />}
+        {activeTab === 'brands' && <AdminBrand />}
+        {activeTab === 'inventory' && <AdminStockQuantity />}
+
+        {/* --- CÁC COMPONENT QUẢN LÝ IMEI, BẢO HÀNH VÀ ĐÓNG GÓI --- */}
+        {activeTab === 'import_imei' && <AdminImportSerials />}
+        
+        {/* Do AdminWarranty đã tích hợp cả tra cứu bảo hành và chức năng thu hồi/trả hàng nên render cho cả 2 tab */}
+        {(activeTab === 'warranty' || activeTab === 'return') && <AdminWarranty />}
+        
+        {/* Component Đóng gói hiển thị khi nhấn từ AdminOrder */}
+        {activeTab === 'pack_order' && <AdminOrderPacking orderId={packOrderId} setActiveTab={setActiveTab} />}
 
       </main>
     </div>

@@ -5,9 +5,9 @@ const Footer = () => {
   return (
     <footer className="wolfbed-footer pt-5 pb-3">
       <div className="container text-center text-white mb-5">
-        <h4 className="fw-bold mb-3">Home Living</h4>
+        <h4 className="fw-bold mb-3">Book Store</h4>
         <p className="footer-intro mx-auto" style={{ maxWidth: '800px' }}>
-          Mua Đệm, Chăn ga gối & Phụ kiện chính hãng đến ngay Wolf Bed. Tư vấn cá nhân hoá, Nằm thử 120 đêm, 
+          Mua Sách, Văn phòng phẩm & Phụ kiện chính hãng đến ngay Book Store. Tư vấn cá nhân hoá, 
           Đổi trả dễ, Giao tận nơi, Giá ưu đãi, Hỗ trợ trả góp 0%!
         </p>
         
@@ -34,7 +34,7 @@ const Footer = () => {
           <div className="col-lg-3 col-md-6 mb-4">
             <h6 className="footer-title">Home Living</h6>
             <ul className="list-unstyled footer-contact">
-              <li><i className="fa-regular fa-envelope me-2"></i> homeliving@home.vn</li>
+              <li><i className="fa-regular fa-envelope me-2"></i> bookstore@book.vn</li>
               <li><i className="fa-solid fa-location-dot me-2"></i> 70 Lữ Gia, Phường 15, Quận 11, Thành phố Hồ Chí Minh</li>
               <li><i className="fa-solid fa-phone me-2"></i> 1900 6750</li>
             </ul>

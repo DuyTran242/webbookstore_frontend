@@ -4,12 +4,12 @@ import './Carousel.css';
 
 // Import ảnh từ thư mục src/img/
 import slide1 from '../img/slideshow_1.png';
-import slide2 from '../img/slideshow_2.png';
+import slide2 from '../img/slideshow_3.png';
 
 // Import các ảnh banner (giả định tên file dựa trên ảnh bạn cung cấp)
-import rightBanner1 from '../img/rigth1.jpg'; 
-import rightBanner2 from '../img/right2.jpg'; 
-import rightBanner3 from '../img/right3.jpg'; 
+import rightBanner1 from '../img/ca6.jpg'; 
+import rightBanner2 from '../img/right2.png'; 
+import rightBanner3 from '../img/right3.webp'; 
 
 import bottom1 from '../img/ca1.jpg';
 import bottom2 from '../img/ca2.jpg';
@@ -25,14 +25,14 @@ const Carousel: React.FC = () => {
           <ul className="sidebar-menu">
             <li className="sidebar-item">
               <a href="#" className="sidebar-link">
-                Bếp - Phòng ăn <i className="fas fa-chevron-right hover-icon"></i>
+                Sách - Văn Học <i className="fas fa-chevron-right hover-icon"></i>
               </a>
             </li>
             
             {/* Mục có Sub-menu */}
             <li className="sidebar-item">
               <a href="#" className="sidebar-link">
-                Đèn Phòng Khách <i className="fas fa-chevron-right hover-icon"></i>
+                Sách - Kinh tế <i className="fas fa-chevron-right hover-icon"></i>
               </a>
               {/* Menu con hiện ra khi hover */}
               <div className="sub-menu">
@@ -44,7 +44,7 @@ const Carousel: React.FC = () => {
 
             <li className="sidebar-item">
               <a href="#" className="sidebar-link">
-                SALON - SOFA <i className="fas fa-chevron-right hover-icon"></i>
+                Sách - Thiếu Nhi <i className="fas fa-chevron-right hover-icon"></i>
               </a>
               <div className="sub-menu">
                 <a href="#" className="sub-menu-item">ĐÈN ĐỂ BÀN</a>
@@ -54,32 +54,32 @@ const Carousel: React.FC = () => {
             </li>
             <li className="sidebar-item">
               <a href="#" className="sidebar-link">
-                Bàn ghế văn phòng <i className="fas fa-chevron-right hover-icon"></i>
+                Sách - Kĩ năng sống <i className="fas fa-chevron-right hover-icon"></i>
               </a>
             </li>
             <li className="sidebar-item">
               <a href="#" className="sidebar-link">
-                Tủ kệ <i className="fas fa-chevron-right hover-icon"></i>
+                Sách - Giáo dục <i className="fas fa-chevron-right hover-icon"></i>
               </a>
             </li>
             <li className="sidebar-item">
               <a href="#" className="sidebar-link">
-                Giường - Nệm <i className="fas fa-chevron-right hover-icon"></i>
+                Sách - Khoa học kĩ thuật <i className="fas fa-chevron-right hover-icon"></i>
               </a>
             </li>
             <li className="sidebar-item">
               <a href="#" className="sidebar-link">
-                Đồ gia dụng <i className="fas fa-chevron-right hover-icon"></i>
+                Sách - Toán học <i className="fas fa-chevron-right hover-icon"></i>
               </a>
             </li>
             <li className="sidebar-item">
               <a href="#" className="sidebar-link">
-                Gia Dụng, Tủ Bếp <i className="fas fa-chevron-right hover-icon"></i>
+                Sách - Tâm lý <i className="fas fa-chevron-right hover-icon"></i>
               </a>
             </li>
             <li className="sidebar-item">
               <a href="#" className="sidebar-link">
-                Thiết bị vệ sinh <i className="fas fa-chevron-right hover-icon"></i>
+                Truyện <i className="fas fa-chevron-right hover-icon"></i>
               </a>
             </li>
           </ul>

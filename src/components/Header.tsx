@@ -99,7 +99,7 @@ const Header = () => {
           {/* Logo */}
           <div className="col-lg-2 col-md-3">
             <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <h1 className="logo-text m-0">HOME<span>LIVING</span></h1>
+              <h1 className="logo-text m-0">BOOK<span>STORE</span></h1>
             </Link>
           </div>
 
@@ -109,7 +109,7 @@ const Header = () => {
               <input
                 type="text"
                 className="form-control rounded-pill border-0 shadow-sm"
-                placeholder={t('header.search_placeholder')} // [SỬA ĐỂ DỊCH]
+                placeholder="Tìm kiếm BookStore" // [SỬA ĐỂ DỊCH]
               />
               <button className="search-btn">
                 <i className="fa-solid fa-magnifying-glass"></i>
@@ -271,70 +271,70 @@ const Header = () => {
               {isProductOpen && (
                 <div className="mega-menu shadow-lg">
                   <div className="container py-4">
-                    <div className="mega-section-title mb-2">Nệm</div>
+                    <div className="mega-section-title mb-2">Sách Trong Nước</div>
                     <div className="row mb-4">
                       <div className="col">
-                        <p className="menu-label">Kích thước</p>
+                        <p className="menu-label">Thể loại</p>
                         <ul className="mega-list">
-                          <li>100 x 200cm</li><li>120 x 200cm</li><li>140 x 200cm</li><li>160 x 200cm</li><li>180 x 200cm</li><li>200 x 200cm</li><li>220 x 200cm</li>
+                          <li>Văn học Việt Nam</li><li>Kinh tế - Kinh doanh</li><li>Kỹ năng sống</li><li>Sách thiếu nhi</li><li>Truyện tranh (Manga/Comic)</li><li>Tâm lý học</li><li>Lịch sử - Địa lý</li>
                         </ul>
                       </div>
                       <div className="col">
                         <p className="menu-label">Giá tiền</p>
                         <ul className="mega-list">
-                          <li>Dưới 5 triệu</li><li>5 triệu - 10 triệu</li><li>10 triệu - 15 triệu</li><li>15 triệu - 30 triệu</li><li>30 triệu - 50 triệu</li><li>Trên 50 triệu</li>
+                          <li>Dưới 50.000đ</li><li>50.000đ - 100.000đ</li><li>100.000đ - 200.000đ</li><li>200.000đ - 300.000đ</li><li>300.000đ - 500.000đ</li><li>Trên 500.000đ</li>
                         </ul>
                       </div>
                       <div className="col">
-                        <p className="menu-label">Loại sản phẩm</p>
+                        <p className="menu-label">Hình thức</p>
                         <ul className="mega-list">
-                          <li>Nệm bông ép</li><li>Nệm cao su</li><li>Nệm lò xo</li><li>Nệm foam</li>
+                          <li>Sách bìa mềm</li><li>Sách bìa cứng</li><li>Sách bỏ túi (Pocket)</li><li>Sách nói (Audiobook)</li>
                         </ul>
                       </div>
                       <div className="col">
-                        <p className="menu-label">Thương hiệu</p>
+                        <p className="menu-label">Nhà xuất bản / Đơn vị</p>
                         <ul className="mega-list">
-                          <li>Amando</li><li>Aeroflow</li><li>Dunlopillo</li><li>Goodnight</li><li>Gummi</li><li>Kim Cương</li><li>Liên Á</li><li>Comfy</li>
+                          <li>NXB Trẻ</li><li>Nhã Nam</li><li>Alpha Books</li><li>Kim Đồng</li><li>Đông A</li><li>NXB Kim Đồng</li><li>NXB Phụ Nữ</li><li>First News</li>
                         </ul>
                       </div>
                       <div className="col">
-                        <p className="menu-label">Nhu cầu</p>
+                        <p className="menu-label">Xu hướng</p>
                         <ul className="mega-list">
-                          <li>Nệm gấp gọn</li><li>Nệm hỗ trợ đau lưng</li><li>Nệm làm mát</li><li>Nệm khách sạn</li><li>Nệm cao cấp</li><li>Nệm cưới</li>
+                          <li>Sách bán chạy</li><li>Sách mới xuất bản</li><li>Sách được giải thưởng</li><li>Sách sắp phát hành</li><li>Combo sách giá tốt</li><li>Sách có chữ ký</li>
                         </ul>
                       </div>
                     </div>
 
-                    <div className="mega-section-title mb-2 mt-2">Chăn ga</div>
+                    <div className="mega-section-title mb-2 mt-2">Sách Nước Ngoài (Foreign Books)</div>
                     <div className="row">
                       <div className="col">
-                        <p className="menu-label">Loại sản phẩm</p>
+                        <p className="menu-label">Thể loại</p>
                         <ul className="mega-list">
-                          <li>Bộ ga chun</li><li>Bộ chăn ga chun</li>
+                          <li>Fiction (Văn học)</li><li>Non-Fiction (Phi hư cấu)</li>
                         </ul>
                       </div>
                       <div className="col">
-                        <p className="menu-label">Kích thước</p>
+                        <p className="menu-label">Ngôn ngữ</p>
                         <ul className="mega-list">
-                          <li>120 x 200cm</li><li>160 x 200cm</li>
+                          <li>Tiếng Anh</li><li>Tiếng Nhật/Tiếng Trung</li>
                         </ul>
                       </div>
                       <div className="col">
                         <p className="menu-label">Giá tiền</p>
                         <ul className="mega-list">
-                          <li>Dưới 1 triệu</li><li>Từ 1 - 2 triệu</li>
+                          <li>Dưới 200.000đ</li><li>Từ 200.000đ trở lên</li>
                         </ul>
                       </div>
                       <div className="col">
-                        <p className="menu-label">Thương hiệu</p>
+                        <p className="menu-label">Nhà xuất bản</p>
                         <ul className="mega-list">
-                          <li>Goodnight</li><li>Amando</li>
+                          <li>Penguin Books</li><li>HarperCollins</li>
                         </ul>
                       </div>
                       <div className="col">
-                        <p className="menu-label">Nhu cầu</p>
+                        <p className="menu-label">Mục đích</p>
                         <ul className="mega-list">
-                          <li>Chăn ga cưới</li><li>Chăn ga làm mát</li>
+                          <li>Học ngoại ngữ</li><li>Sách nhập khẩu chính hãng</li>
                         </ul>
                       </div>
                     </div>

@@ -42,7 +42,7 @@ const LoginAdmin = () => {
 
                 <div className="admin-login-image d-none d-md-block">
                     <div className="image-overlay d-flex flex-column justify-content-center align-items-center text-white p-4">
-                        <h2 className="fw-bold mb-3">BOOKSTORE</h2>
+                        <h2 className="fw-bold mb-3">BOOK STORE</h2>
                         <p className="text-center">Hệ thống quản trị nội dung & Đơn hàng</p>
                     </div>
                 </div>

@@ -121,7 +121,7 @@ const Footer = () => {
         <div className="container">
           <div className="row align-items-center">
             <div className="col-md-9">
-              <p className="mb-1 small">© Bản quyền thuộc về <strong>DuyIT</strong>. Cung cấp bởi DuyIT</p>
+              <p className="mb-1 small">© Bản quyền thuộc về <strong>Bookstore</strong>. Cung cấp bởi Bookstore</p>
               <p className="mb-0 x-small text-muted">Mã số Doanh nghiệp: 0314314314 do Sở Kế hoạch & Đầu tư TP Hồ Chí Minh cấp ngày 24/06/2025</p>
             </div>
             <div className="col-md-3 text-end">

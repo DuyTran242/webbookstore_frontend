@@ -14,6 +14,7 @@ import AdminStockQuantity from './AdminStockQuantity';
 import AdminImportSerials from './AdminImportSerials';
 import AdminWarranty from './AdminWarranty';
 import AdminOrderPacking from './AdminOrderPacking';
+import AdminReview from './AdminReview';
 
 
 
@@ -277,6 +278,7 @@ const Admin = () => {
         {activeTab === 'categories' && <AdminCategories />}
         {activeTab === 'brands' && <AdminBrand />}
         {activeTab === 'inventory' && <AdminStockQuantity />}
+        {activeTab === 'reviews' && <AdminReview />}
 
         {/* --- CÁC COMPONENT QUẢN LÝ IMEI, BẢO HÀNH VÀ ĐÓNG GÓI --- */}
         {activeTab === 'import_imei' && <AdminImportSerials />}

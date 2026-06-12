@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './ProductList.css';
 import { Link, useSearchParams } from 'react-router-dom';
+import { getFavorites, addFavorite, removeFavorite } from '../api/favoriteApi';
 
 // Import ảnh đối tác tĩnh
 import com1 from '../img/company1.jpg';
@@ -33,6 +34,111 @@ interface Product {
   badgeText?: string;
   badgeType?: 'teal' | 'red';
 }
+
+const ProductItem: React.FC<{ product: Product; formatPrice: (price: number) => string }> = ({ product, formatPrice }) => {
+  const [isFavorited, setIsFavorited] = useState(false);
+
+  useEffect(() => {
+    const fetchFavoriteStatus = async () => {
+      const userSessionStr = localStorage.getItem('userSession');
+      if (userSessionStr) {
+        const user = JSON.parse(userSessionStr);
+        try {
+          const favorites = await getFavorites(user.id);
+          setIsFavorited(favorites.some(fav => fav.id === product.id));
+        } catch (error) {
+          console.error("Lỗi khi tải danh sách yêu thích:", error);
+        }
+      }
+    };
+
+    fetchFavoriteStatus();
+
+    const handleUpdate = () => fetchFavoriteStatus();
+    window.addEventListener('favoritesUpdated', handleUpdate);
+    return () => window.removeEventListener('favoritesUpdated', handleUpdate);
+  }, [product.id]);
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const userSessionStr = localStorage.getItem('userSession');
+    if (!userSessionStr) {
+      alert("Vui lòng đăng nhập để thêm vào danh sách yêu thích!");
+      return;
+    }
+    const user = JSON.parse(userSessionStr);
+
+    try {
+      if (isFavorited) {
+        await removeFavorite(user.id, product.id);
+        setIsFavorited(false);
+        alert(`Sản phẩm "${product.name}" đã được xóa khỏi danh sách yêu thích (DB)!`);
+      } else {
+        await addFavorite(user.id, product.id);
+        setIsFavorited(true);
+        alert(`Đã thêm "${product.name}" vào danh sách yêu thích (DB)!`);
+      }
+      window.dispatchEvent(new Event('favoritesUpdated'));
+    } catch (error) {
+      console.error("Lỗi khi cập nhật yêu thích:", error);
+      alert("Có lỗi xảy ra, vui lòng thử lại sau.");
+    }
+  };
+
+  const primaryImageObj = product.images?.find(img => img.isPrimary === 1) || product.images?.[0];
+  const imageUrl = primaryImageObj ? primaryImageObj.imageUrl : '';
+
+  return (
+    <div className="col-md-3">
+      <div className="product-card">
+
+        {product.badgeText && (
+          <div className={`product-badge badge-${product.badgeType}`}>
+            {product.badgeText}
+          </div>
+        )}
+
+        <div className="product-img-wrapper">
+          <Link to={`/product/${product.id}`}>
+            {imageUrl ? (
+              <img src={imageUrl} alt={product.name} className="product-img" />
+            ) : (
+              <div className="d-flex justify-content-center align-items-center bg-light" style={{ height: '250px' }}>
+                <span className="text-muted">Chưa có ảnh</span>
+              </div>
+            )}
+          </Link>
+        </div>
+
+        <Link to={`/product/${product.id}`} className="product-name">
+          {product.name}
+        </Link>
+
+        <div className="mb-2">
+          <span className="product-price">{formatPrice(product.price)}</span>
+          {product.oldPrice && (
+            <span className="product-old-price">{formatPrice(product.oldPrice)}</span>
+          )}
+        </div>
+
+        <div className="d-flex justify-content-center align-items-center mt-3">
+          <button className="btn btn-add-to-cart" style={{ backgroundColor: '#28a745', borderColor: '#28a745' }}>
+            ADD TO CART
+          </button>
+          <i 
+            className={`fa-heart heart-icon ms-3 fs-5 ${isFavorited ? 'fa-solid text-danger' : 'fa-regular'}`} 
+            title="Thêm vào yêu thích"
+            onClick={handleLike}
+            style={{ cursor: 'pointer' }}
+          ></i>
+        </div>
+
+      </div>
+    </div>
+  );
+};
 
 const ProductList: React.FC = () => {
   // [THÊM MỚI]: Lấy params từ URL
@@ -151,59 +257,9 @@ const ProductList: React.FC = () => {
             </div>
           ) : (
             <div className="row g-0">
-              {currentItems.map((product) => {
-                // TÌM ẢNH ĐẠI DIỆN: Lấy ảnh có isPrimary = 1, nếu không có thì lấy ảnh đầu tiên
-                const primaryImageObj = product.images?.find(img => img.isPrimary === 1) || product.images?.[0];
-                const imageUrl = primaryImageObj ? primaryImageObj.imageUrl : ''; 
-
-                return (
-                  <div key={product.id} className="col-md-3">
-                    <div className="product-card">
-
-                      {/* Badge (Ví dụ: HOT, MỚI) */}
-                      {product.badgeText && (
-                        <div className={`product-badge badge-${product.badgeType}`}>
-                          {product.badgeText}
-                        </div>
-                      )}
-                      
-                      {/* Hình ảnh Base64 */}
-                      <div className="product-img-wrapper">
-                        <Link to={`/product/${product.id}`}>
-                          {imageUrl ? (
-                            <img src={imageUrl} alt={product.name} className="product-img" />
-                          ) : (
-                            <div className="d-flex justify-content-center align-items-center bg-light" style={{ height: '250px' }}>
-                              <span className="text-muted">Chưa có ảnh</span>
-                            </div>
-                          )}
-                        </Link>
-                      </div>
-                      
-                      {/* Thông tin Tên Sản Phẩm */}
-                      <Link to={`/product/${product.id}`} className="product-name">
-                        {product.name}
-                      </Link>
-
-                      <div className="mb-2">
-                        <span className="product-price">{formatPrice(product.price)}</span>
-                        {product.oldPrice && (
-                          <span className="product-old-price">{formatPrice(product.oldPrice)}</span>
-                        )}
-                      </div>
-
-                      {/* Nút ADD TO CART & Icon Trái Tim */}
-                      <div className="d-flex justify-content-center align-items-center mt-3">
-                        <button className="btn btn-add-to-cart" style={{ backgroundColor: '#28a745', borderColor: '#28a745' }}>
-                          ADD TO CART
-                        </button>
-                        <i className="fas fa-heart heart-icon ms-3 fs-5" title="Thêm vào yêu thích"></i>
-                      </div>
-
-                    </div>
-                  </div>
-                );
-              })}
+              {currentItems.map((product) => (
+                <ProductItem key={product.id} product={product} formatPrice={formatPrice} />
+              ))}
             </div>
           )}
 

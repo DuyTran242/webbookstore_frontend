@@ -4,6 +4,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import './ChiTietSanPham.css';
 import { CartContext } from './CartContext';
+import { getFavorites, addFavorite, removeFavorite } from '../api/favoriteApi';
 
 const ChiTietSanPham = () => {
     const { id } = useParams();
@@ -19,6 +20,10 @@ const ChiTietSanPham = () => {
     const [reviewContent, setReviewContent] = useState('');
     const [reviewRating, setReviewRating] = useState(5);
     const [averageRating, setAverageRating] = useState(0);
+    const [replyingTo, setReplyingTo] = useState(null);
+    const [editingReview, setEditingReview] = useState(null);
+    const [activeTab, setActiveTab] = useState('desc');
+    const [hasPurchased, setHasPurchased] = useState(false);
     // Bên trong function ChiTietSanPham
     const { fetchCartItems, setIsCartOpen } = useContext(CartContext);
 
@@ -54,6 +59,15 @@ const ChiTietSanPham = () => {
                             setRelatedProducts(related);
                         });
                 }
+                
+                // Kiểm tra đã mua hàng chưa
+                if (userSession) {
+                    fetch(`http://localhost:8080/api/productsreview/check-purchase?userId=${userSession.id}&productId=${data.id}`)
+                        .then(res => res.json())
+                        .then(bought => setHasPurchased(bought))
+                        .catch(err => console.error(err));
+                }
+
                 setLoading(false);
             })
             .catch(err => {
@@ -62,11 +76,61 @@ const ChiTietSanPham = () => {
             });
     }, [id]); // <--- useCallback sẽ theo dõi sự thay đổi của id
 
+    const [isFavorited, setIsFavorited] = useState(false);
+
     useEffect(() => {
+        const fetchFavoriteStatus = async () => {
+            if (userSession && userSession.id && id) {
+                try {
+                    const favorites = await getFavorites(userSession.id);
+                    setIsFavorited(favorites.some(fav => fav.id === parseInt(id)));
+                } catch (error) {
+                    console.error("Lỗi khi tải danh sách yêu thích:", error);
+                }
+            }
+        };
+
         window.scrollTo(0, 0);
         setLoading(true);
         fetchProductData();
+        fetchFavoriteStatus();
+
+        const handleUpdate = () => fetchFavoriteStatus();
+        window.addEventListener('favoritesUpdated', handleUpdate);
+        return () => window.removeEventListener('favoritesUpdated', handleUpdate);
     }, [id, fetchProductData]); // <--- Thêm fetchProductData vào đây để hết cảnh báo
+
+    const handleLike = async () => {
+        if (!userSession) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Yêu cầu đăng nhập',
+                text: 'Bạn cần đăng nhập để thêm vào danh sách yêu thích!',
+                showCancelButton: true,
+                confirmButtonText: 'Đăng nhập ngay',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) navigate('/login');
+            });
+            return;
+        }
+
+        try {
+            if (isFavorited) {
+                await removeFavorite(userSession.id, product.id);
+                setIsFavorited(false);
+                Swal.fire({ icon: 'success', title: 'Thành công', text: `Sản phẩm đã được xóa khỏi danh sách yêu thích!`, timer: 1500 });
+            } else {
+                await addFavorite(userSession.id, product.id);
+                setIsFavorited(true);
+                Swal.fire({ icon: 'success', title: 'Thành công', text: `Đã thêm sản phẩm vào danh sách yêu thích!`, timer: 1500 });
+            }
+            window.dispatchEvent(new Event('favoritesUpdated'));
+        } catch (error) {
+            console.error("Lỗi khi cập nhật yêu thích:", error);
+            Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Có lỗi xảy ra, vui lòng thử lại sau.' });
+        }
+    };
 
     const formatPrice = (price) => price ? price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " đ" : "0 đ";
 
@@ -192,20 +256,141 @@ const ChiTietSanPham = () => {
 
         const payload = {
             productId: product.id,
-            userId: userSession ? userSession.id : null, // Nếu có session gởi ID, không có gởi null (Khách)
-            rating: reviewRating,
-            comment: reviewContent
+            userId: userSession ? userSession.id : null,
+            rating: replyingTo ? 0 : reviewRating,
+            comment: reviewContent,
+            parentId: replyingTo,
+            reviewId: editingReview ? editingReview.id : null
         };
 
         try {
-            await axios.post('http://localhost:8080/api/productsreview', payload);
-            Swal.fire({ icon: 'success', title: 'Tuyệt vời', text: 'Cảm ơn bạn đã đánh giá!', timer: 1500 });
+            if (editingReview) {
+                await axios.put(`http://localhost:8080/api/productsreview/${editingReview.id}`, payload);
+                Swal.fire({ icon: 'success', title: 'Tuyệt vời', text: 'Cập nhật đánh giá thành công!', timer: 1500 });
+            } else {
+                await axios.post('http://localhost:8080/api/productsreview', payload);
+                Swal.fire({ icon: 'success', title: 'Tuyệt vời', text: replyingTo ? 'Đã trả lời bình luận!' : 'Cảm ơn bạn đã đánh giá!', timer: 1500 });
+            }
             setReviewContent('');
             setReviewRating(5);
-            fetchProductData(); // Tải lại dữ liệu để cập nhật sao và danh sách bình luận
+            setReplyingTo(null);
+            setEditingReview(null);
+            fetchProductData();
         } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Không thể gửi đánh giá lúc này.' });
+            Swal.fire({ icon: 'error', title: 'Lỗi', text: error.response?.data || 'Không thể gửi đánh giá lúc này.' });
         }
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        if (!userSession) return;
+        const result = await Swal.fire({
+            title: 'Xóa bình luận?',
+            text: "Bạn có chắc chắn muốn xóa bình luận này?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Xóa',
+            cancelButtonText: 'Hủy'
+        });
+        if (result.isConfirmed) {
+            try {
+                await axios.delete(`http://localhost:8080/api/productsreview/${reviewId}?userId=${userSession.id}`);
+                Swal.fire('Đã xóa!', 'Bình luận đã bị xóa.', 'success');
+                fetchProductData();
+            } catch (error) {
+                Swal.fire('Lỗi!', error.response?.data || 'Không thể xóa bình luận.', 'error');
+            }
+        }
+    };
+
+    const renderReviewItem = (rv, isReply = false, parentId = null) => {
+        return (
+            <div key={rv.id} className={`d-flex pb-3 mb-3 ${isReply ? 'ms-4 mt-2 border-start ps-3' : 'border-bottom'}`}>
+                <img src={rv.userAvatar || 'https://via.placeholder.com/50'} alt="avatar" className="rounded-circle me-3 border" style={{ width: '40px', height: '40px', objectFit: 'cover' }} />
+                <div className="w-100">
+                    <div className="d-flex justify-content-between align-items-center">
+                        <h6 className="mb-0 text-dark fw-bold">{rv.userName}</h6>
+                        <small className="text-muted">{new Date(rv.createdAt).toLocaleDateString('vi-VN')}</small>
+                    </div>
+                    {!isReply && <div className="text-warning small mb-1">{renderStars(rv.rating)}</div>}
+                    <p className="mb-1 text-dark">{rv.comment}</p>
+                    
+                    <div className="d-flex gap-3 mt-2">
+                        {userSession && <span className="text-primary small fw-semibold" style={{cursor: 'pointer'}} onClick={() => { setReplyingTo(replyingTo === (isReply ? parentId : rv.id) ? null : (isReply ? parentId : rv.id)); setEditingReview(null); setReviewContent(''); }}>Trả lời</span>}
+                        {userSession && userSession.id === rv.userId && (
+                            <>
+                                <span className="text-secondary small fw-semibold" style={{cursor: 'pointer'}} onClick={() => { setEditingReview(rv); setReplyingTo(null); setReviewContent(rv.comment); setReviewRating(rv.rating || 5); }}>Sửa</span>
+                                <span className="text-danger small fw-semibold" style={{cursor: 'pointer'}} onClick={() => handleDeleteReview(rv.id)}>Xóa</span>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Inline Reply Form */}
+                    {replyingTo === (isReply ? parentId : rv.id) && (
+                        <div className="mt-3 bg-light p-3 rounded border">
+                            <h6 className="fw-bold mb-2 small text-primary">Đang trả lời {rv.userName}</h6>
+                            <form onSubmit={handleSubmitReview}>
+                                <div className="mb-2">
+                                    <textarea
+                                        className="form-control border-dark-subtle"
+                                        rows="2"
+                                        placeholder="Nhập nội dung trả lời..."
+                                        value={reviewContent}
+                                        onChange={e => setReviewContent(e.target.value)}
+                                        autoFocus
+                                    ></textarea>
+                                </div>
+                                <div className="d-flex gap-2 justify-content-end">
+                                    <button type="button" className="btn btn-sm btn-secondary" onClick={() => setReplyingTo(null)}>Hủy</button>
+                                    <button type="submit" className="btn btn-sm btn-primary">Gửi Trả Lời</button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* Inline Edit Form */}
+                    {editingReview?.id === rv.id && (
+                        <div className="mt-3 bg-light p-3 rounded border">
+                            <h6 className="fw-bold mb-2 small text-secondary">Sửa bình luận</h6>
+                            <form onSubmit={handleSubmitReview}>
+                                {!isReply && (
+                                    <div className="mb-2">
+                                        <label className="form-label fw-bold small">Đổi số sao:</label>
+                                        <select className="form-select form-select-sm border-dark-subtle" value={reviewRating} onChange={e => setReviewRating(Number(e.target.value))}>
+                                            <option value="5">5 Sao</option>
+                                            <option value="4">4 Sao</option>
+                                            <option value="3">3 Sao</option>
+                                            <option value="2">2 Sao</option>
+                                            <option value="1">1 Sao</option>
+                                        </select>
+                                    </div>
+                                )}
+                                <div className="mb-2">
+                                    <textarea
+                                        className="form-control border-dark-subtle"
+                                        rows="2"
+                                        value={reviewContent}
+                                        onChange={e => setReviewContent(e.target.value)}
+                                        autoFocus
+                                    ></textarea>
+                                </div>
+                                <div className="d-flex gap-2 justify-content-end">
+                                    <button type="button" className="btn btn-sm btn-secondary" onClick={() => setEditingReview(null)}>Hủy</button>
+                                    <button type="submit" className="btn btn-sm btn-success">Cập Nhật</button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+                    
+                    {rv.replies && rv.replies.length > 0 && (
+                        <div className="mt-3">
+                            {rv.replies.map(reply => renderReviewItem(reply, true, rv.id))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
     };
 
     // Helper render ngôi sao
@@ -293,8 +478,12 @@ const ChiTietSanPham = () => {
                                 {product.stockQuantity > 0 ? 'THÊM VÀO GIỎ' : 'HẾT HÀNG'}
                             </button>
 
-                            <button className="btn btn-outline-danger px-3 py-2" onClick={() => requireLogin(() => alert('Đã thêm yêu thích'))} title="Yêu thích">
-                                <i className="far fa-heart"></i>
+                            <button 
+                                className={`btn px-3 py-2 ${isFavorited ? 'btn-danger text-white' : 'btn-outline-danger'}`} 
+                                onClick={handleLike} 
+                                title={isFavorited ? "Bỏ yêu thích" : "Yêu thích"}
+                            >
+                                <i className={`${isFavorited ? 'fas' : 'far'} fa-heart`}></i>
                             </button>
                         </div>
 
@@ -315,13 +504,14 @@ const ChiTietSanPham = () => {
                     <div className="col-12">
                         <ul className="nav nav-tabs detail-tabs mb-4 border-bottom-0" role="tablist">
                             <li className="nav-item">
-                                <button className="nav-link active fw-bold text-dark px-4 py-3" data-bs-toggle="tab" data-bs-target="#desc">MÔ TẢ SẢN PHẨM</button>
+                                <button className={`nav-link fw-bold text-dark px-4 py-3 ${activeTab === 'desc' ? 'active' : ''}`} onClick={() => setActiveTab('desc')}>MÔ TẢ SẢN PHẨM</button>
                             </li>
                             <li className="nav-item">
-                                <button className="nav-link fw-bold text-dark px-4 py-3" data-bs-toggle="tab" data-bs-target="#reviews">ĐÁNH GIÁ ({product.reviews?.length || 0})</button>
+                                <button className={`nav-link fw-bold text-dark px-4 py-3 ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>ĐÁNH GIÁ ({product.reviews?.length || 0})</button>
                             </li>
                         </ul>
                         <div className="tab-content border rounded p-4 shadow-sm bg-white" style={{ lineHeight: '1.8' }}>
+                            {activeTab === 'desc' && (
                             <div className="tab-pane fade show active" id="desc">
                                 <p>{product.description}</p>
                                 <ul className="list-unstyled mt-3">
@@ -330,45 +520,33 @@ const ChiTietSanPham = () => {
                                     {product.weight && <li><strong>Trọng lượng:</strong> {product.weight}</li>}
                                 </ul>
                             </div>
+                            )}
 
                             {/* GIAO DIỆN ĐÁNH GIÁ MỚI */}
-                            <div className="tab-pane fade" id="reviews">
-                                <div className="row">
-                                    <div className="col-md-7 border-end pe-md-4">
-                                        <h5 className="mb-4 fw-bold">Bình luận của khách hàng</h5>
+                            {activeTab === 'reviews' && (() => {
+                                const showRightForm = hasPurchased && !product.reviews?.some(rv => rv.userId === userSession?.id);
+                                return (
+                                <div className="tab-pane fade show active" id="reviews">
+                                    <div className="row">
+                                        <div className={`col-md-${showRightForm ? '7 border-end pe-md-4' : '12'}`}>
+                                            <h5 className="mb-4 fw-bold">Bình luận của khách hàng</h5>
 
-                                        {/* VÙNG CHỨA BÌNH LUẬN CÓ THANH CUỘN */}
-                                        <div
-                                            className="review-scroll-container pe-2"
-                                            style={{ maxHeight: '500px', overflowY: 'auto', overflowX: 'hidden' }}
-                                        >
-                                            {product.reviews?.length > 0 ? (
-                                                product.reviews.map(rv => (
-                                                    <div key={rv.id} className="d-flex border-bottom pb-3 mb-3">
-                                                        <img src={rv.userAvatar || 'https://via.placeholder.com/50'} alt="avatar" className="rounded-circle me-3 border" style={{ width: '50px', height: '50px', objectFit: 'cover' }} />
-                                                        <div>
-                                                            <h6 className="mb-0 text-dark fw-bold">{rv.userName}</h6>
-                                                            <div className="text-warning small mb-1">{renderStars(rv.rating)}</div>
-                                                            <p className="mb-1 text-dark">{rv.comment}</p>
-                                                            <small className="text-muted">{new Date(rv.createdAt).toLocaleDateString('vi-VN')}</small>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <p className="fst-italic text-center mt-4 text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="col-md-5 ps-md-4">
-                                        <h5 className="mb-4 fw-bold">Viết đánh giá của bạn</h5>
-                                        {!userSession && (
-                                            <div className="alert alert-secondary text-center p-2 mb-3">
-                                                <small>Bạn đang bình luận dưới tư cách <strong>Khách vãng lai</strong>. <Link to="/login" className="text-primary text-decoration-none fw-bold">Đăng nhập</Link> để lưu danh tính.</small>
+                                            <div
+                                                className="review-scroll-container pe-2"
+                                                style={{ maxHeight: '600px', overflowY: 'auto', overflowX: 'hidden' }}
+                                            >
+                                                {product.reviews?.length > 0 ? (
+                                                    product.reviews.map(rv => renderReviewItem(rv, false))
+                                                ) : (
+                                                    <p className="fst-italic text-center mt-4 text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
+                                                )}
                                             </div>
-                                        )}
+                                        </div>
+
+                                        {showRightForm && (
+                                        <div className="col-md-5 ps-md-4" id="reviewForm">
+                                        <h5 className="mb-4 fw-bold">Viết đánh giá của bạn</h5>
                                         <form onSubmit={handleSubmitReview}>
-                                            {/* ... (Giữ nguyên form đánh giá của bạn ở đây) ... */}
                                             <div className="mb-3">
                                                 <label className="form-label fw-bold">Số sao:</label>
                                                 <select className="form-select border-dark-subtle" value={reviewRating} onChange={e => setReviewRating(Number(e.target.value))}>
@@ -380,7 +558,7 @@ const ChiTietSanPham = () => {
                                                 </select>
                                             </div>
                                             <div className="mb-3">
-                                                <label className="form-label fw-bold">Nội dung đánh giá:</label>
+                                                <label className="form-label fw-bold">Nội dung:</label>
                                                 <textarea
                                                     className="form-control border-dark-subtle"
                                                     rows="4"
@@ -389,11 +567,21 @@ const ChiTietSanPham = () => {
                                                     onChange={e => setReviewContent(e.target.value)}
                                                 ></textarea>
                                             </div>
-                                            <button type="submit" className="btn btn-dark w-100 fw-bold py-2">GỬI BÌNH LUẬN</button>
+                                            <button type="submit" className="btn btn-dark w-100 fw-bold py-2" disabled={!userSession || replyingTo || editingReview}>
+                                                GỬI ĐÁNH GIÁ
+                                            </button>
                                         </form>
                                     </div>
+                                    )}
+                                    {!hasPurchased && !userSession && (
+                                        <div className="col-12 mt-4 alert alert-warning text-center">
+                                            Vui lòng <Link to="/login" className="fw-bold">đăng nhập</Link> và mua sản phẩm để được đánh giá!
+                                        </div>
+                                    )}
                                 </div>
                             </div>
+                            );
+                            })()}
                         </div>
                     </div>
                 </div>

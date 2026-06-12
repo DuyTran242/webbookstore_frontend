@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CartDrawer from './CartDrawer';
 import { useTranslation } from 'react-i18next'; // [THÊM MỚI] Import thư viện đa ngôn ngữ
+import { getFavorites } from '../api/favoriteApi';
 
 // 1. Định nghĩa Type cho Category rõ ràng để sửa lỗi "never[]" của TypeScript
 interface Category {
@@ -20,10 +21,12 @@ const Header = () => {
   const [isProductOpen, setIsProductOpen] = useState(false);
   const [isNewsOpen, setIsNewsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isFavoriteOpen, setIsFavoriteOpen] = useState(false);
 
   // 2. Sử dụng State ĐỘC LẬP cho giỏ hàng (Đã XÓA useContext để không bị lỗi trùng lặp biến)
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [favoriteItems, setFavoriteItems] = useState<any[]>([]);
 
   // Khởi tạo state danh mục với interface Category
   const [categories, setCategories] = useState<Category[]>([]);
@@ -72,20 +75,37 @@ const Header = () => {
     }
   };
 
+  const fetchFavoriteItems = async () => {
+    if (!userId) {
+      setFavoriteItems([]);
+      return;
+    }
+    try {
+      const data = await getFavorites(userId);
+      setFavoriteItems(data);
+    } catch (error) {
+      console.error("Lỗi lấy danh sách yêu thích:", error);
+    }
+  };
+
   // Tự động lấy giỏ hàng khi người dùng đăng nhập thành công (có userId)
   useEffect(() => {
     fetchCartItems();
+    fetchFavoriteItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   // Lắng nghe sự kiện "cartUpdated" từ các trang khác (như trang Chi tiết sản phẩm)
   useEffect(() => {
-    const handleCartUpdate = () => {
-      fetchCartItems();
-    };
+    const handleCartUpdate = () => fetchCartItems();
+    const handleFavoriteUpdate = () => fetchFavoriteItems();
+
     window.addEventListener('cartUpdated', handleCartUpdate);
+    window.addEventListener('favoritesUpdated', handleFavoriteUpdate);
+
     return () => {
       window.removeEventListener('cartUpdated', handleCartUpdate);
+      window.removeEventListener('favoritesUpdated', handleFavoriteUpdate);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
@@ -185,9 +205,45 @@ const Header = () => {
               </div>
 
               {/* Yêu thích */}
-              <div className="position-relative">
-                <i className="fa-regular fa-heart fs-5 pointer-icon"></i>
-                <span className="badge-count bg-wolf-green">0</span>
+              <div
+                className="position-relative hover-trigger"
+                onMouseEnter={() => setIsFavoriteOpen(true)}
+                onMouseLeave={() => setIsFavoriteOpen(false)}
+              >
+                <i className={`fa-regular fa-heart fs-5 pointer-icon ${isFavoriteOpen ? 'active-icon' : ''}`}></i>
+                <span className="badge-count bg-wolf-green">{userSession ? favoriteItems.length : 0}</span>
+
+                {isFavoriteOpen && (
+                  <div className="user-dropdown shadow" style={{ minWidth: '300px', right: '-10px', position: 'absolute', backgroundColor: '#fff', zIndex: 1000, borderRadius: '8px', overflow: 'hidden' }}>
+                    <div className="px-3 py-2 border-bottom bg-light fw-bold text-center">
+                      Danh sách yêu thích
+                    </div>
+                    {!userSession ? (
+                      <div className="p-3 text-center text-muted small">
+                        Vui lòng <Link to="/login" className="text-success text-decoration-none">đăng nhập</Link> để xem
+                      </div>
+                    ) : favoriteItems.length === 0 ? (
+                      <div className="p-3 text-center text-muted small">
+                        Chưa có sản phẩm yêu thích
+                      </div>
+                    ) : (
+                      <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        {favoriteItems.map((item: any) => (
+                          <Link to={`/product/${item.id}`} key={item.id} className="d-flex align-items-center px-3 py-2 text-decoration-none text-dark border-bottom hover-dropdown-item">
+                            <img src={item.image || 'https://via.placeholder.com/40'} alt={item.name} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} className="me-3" />
+                            <div className="flex-grow-1 text-truncate">
+                              <small className="d-block text-truncate fw-bold" title={item.name}>{item.name}</small>
+                              <small className="text-danger fw-bold">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price)}</small>
+                            </div>
+                          </Link>
+                        ))}
+                        <Link to="/profile?tab=wishlist" className="d-block text-center px-3 py-2 text-success text-decoration-none hover-dropdown-item fw-bold" style={{ fontSize: '0.9rem' }}>
+                          Xem tất cả
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* GIỎ HÀNG */}

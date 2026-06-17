@@ -470,6 +470,12 @@ const ThongTinTaiKhoan = () => {
                                 <td className="text-muted">Phí vận chuyển:</td>
                                 <td className="text-end">{formatPrice(selectedOrder.shippingFee)}</td>
                               </tr>
+                              {selectedOrder.discount > 0 && (
+                                <tr>
+                                  <td className="text-muted">Giảm giá:</td>
+                                  <td className="text-end text-success fw-bold">-{formatPrice(selectedOrder.discount)}</td>
+                                </tr>
+                              )}
                               <tr className="border-top">
                                 <td className="fw-bold pt-2 fs-6">Tổng cộng:</td>
                                 <td className="text-end fw-bold text-danger fs-5 pt-2">{formatPrice(selectedOrder.totalPrice)}</td>

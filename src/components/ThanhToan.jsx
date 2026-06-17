@@ -26,6 +26,13 @@ const ThanhToan = () => {
     const [paymentMethod, setPaymentMethod] = useState('VNPAY');
     const [loading, setLoading] = useState(false);
 
+    // --- STATE CHO MÃ GIẢM GIÁ ---
+    const [discountCodeInput, setDiscountCodeInput] = useState('');
+    const [appliedDiscountCode, setAppliedDiscountCode] = useState('');
+    const [discountAmount, setDiscountAmount] = useState(0);
+    const [availableCodes, setAvailableCodes] = useState([]);
+    const [showDiscountModal, setShowDiscountModal] = useState(false);
+
     // Thông tin cấu hình GHN
     const GHN_TOKEN = 'ba02cff9-378b-11f1-a973-aee5264794df';
     const SHOP_ID = 199945;
@@ -38,6 +45,15 @@ const ThanhToan = () => {
         axios.get('https://dev-online-gateway.ghn.vn/shiip/public-api/master-data/province', { headers: GHN_HEADERS })
             .then(res => setProvinces(res.data.data || []))
             .catch(err => console.error("Lỗi lấy tỉnh thành", err));
+
+        // Lấy danh sách mã giảm giá đang hoạt động
+        axios.get('http://localhost:8080/api/discounts/active')
+            .then(res => {
+                // Lọc bỏ những mã đã hết lượt sử dụng
+                const validCodes = res.data.filter(code => !code.usageLimit || code.usageLimit > code.usedCount);
+                setAvailableCodes(validCodes);
+            })
+            .catch(err => console.error("Lỗi lấy mã giảm giá", err));
     }, []);
 
     // --- HANDLE: Khi chọn Tỉnh -> Lấy Huyện ---
@@ -112,6 +128,35 @@ const ThanhToan = () => {
         }
     };
 
+    // --- HÀM ÁP DỤNG MÃ GIẢM GIÁ ---
+    const handleApplyDiscount = async (codeFromButton) => {
+        const codeToApply = typeof codeFromButton === 'string' ? codeFromButton : discountCodeInput.trim();
+        if (!codeToApply) {
+            return Swal.fire("Lỗi", "Vui lòng nhập mã giảm giá", "warning");
+        }
+        try {
+            const res = await axios.post('http://localhost:8080/api/discounts/apply', {
+                code: codeToApply,
+                subtotal: state.totalAmount
+            });
+            if (res.data.success) {
+                setAppliedDiscountCode(codeToApply);
+                setDiscountCodeInput(codeToApply);
+                setDiscountAmount(res.data.discountAmount);
+                setShowDiscountModal(false); // Đóng modal khi áp dụng thành công
+                Swal.fire("Thành công", res.data.message, "success");
+            } else {
+                Swal.fire("Lỗi", res.data.message, "error");
+                setAppliedDiscountCode('');
+                setDiscountAmount(0);
+            }
+        } catch (error) {
+            Swal.fire("Lỗi", error.response?.data?.message || "Mã giảm giá không hợp lệ", "error");
+            setAppliedDiscountCode('');
+            setDiscountAmount(0);
+        }
+    };
+
     // --- HÀM ĐẶT HÀNG ---
     const handlePlaceOrder = async () => {
         if (!customerInfo.wardCode || !customerInfo.fullName || !customerInfo.phone || !customerInfo.addressDetail) {
@@ -130,8 +175,9 @@ const ThanhToan = () => {
             email: customerInfo.email,
             address: `${customerInfo.addressDetail}, ${customerInfo.wardCode}, ${customerInfo.districtId}, ${customerInfo.provinceId}`,
             shippingFee: shippingFee,
-            // SỬA DÒNG NÀY: Đổi totalAmount thành totalPrice
-            totalPrice: state.totalAmount + shippingFee,
+            totalPrice: state.totalAmount + shippingFee - discountAmount,
+            discountCode: appliedDiscountCode,
+            discountAmount: discountAmount,
             paymentMethod: paymentMethod,
             note: state.note || "",
             items: state.cartItems.map(item => ({
@@ -257,10 +303,43 @@ const ThanhToan = () => {
                             <span className="text-secondary">Phí vận chuyển (GHN)</span>
                             <span className="text-primary fw-bold">+{formatVND(shippingFee)}</span>
                         </div>
+
+                        {/* MÃ GIẢM GIÁ */}
+                        <div className="mt-3 mb-3 border p-3 rounded bg-white">
+                            <h6 className="fw-bold mb-2" style={{ fontSize: '14px' }}>Mã giảm giá</h6>
+                            <div className="d-flex gap-2">
+                                <input type="text" className="form-control text-uppercase" placeholder="Nhập mã..." 
+                                    value={discountCodeInput} onChange={(e) => setDiscountCodeInput(e.target.value)}
+                                    disabled={appliedDiscountCode !== ''}
+                                />
+                                {appliedDiscountCode !== '' ? (
+                                    <button className="btn btn-danger text-nowrap" onClick={() => {
+                                        setAppliedDiscountCode('');
+                                        setDiscountCodeInput('');
+                                        setDiscountAmount(0);
+                                    }}>Hủy</button>
+                                ) : (
+                                    <>
+                                        <button className="btn btn-dark text-nowrap" onClick={() => handleApplyDiscount()}>Áp dụng</button>
+                                        <button className="btn btn-outline-primary text-nowrap" onClick={() => setShowDiscountModal(true)}>
+                                            <i className="fa-solid fa-list me-1"></i>Chọn mã
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {discountAmount > 0 && (
+                            <div className="d-flex justify-content-between mb-2 text-success">
+                                <span>Mã giảm giá ({appliedDiscountCode})</span>
+                                <span className="fw-bold">-{formatVND(discountAmount)}</span>
+                            </div>
+                        )}
+
                         <hr />
                         <div className="d-flex justify-content-between align-items-center mt-2">
                             <span className="fw-bold fs-5">TỔNG CỘNG</span>
-                            <span className="fw-bold fs-4 text-danger">{formatVND(state.totalAmount + shippingFee)}</span>
+                            <span className="fw-bold fs-4 text-danger">{formatVND(Math.max(0, state.totalAmount + shippingFee - discountAmount))}</span>
                         </div>
 
                         <button
@@ -273,6 +352,69 @@ const ThanhToan = () => {
                     </div>
                 </div>
             </div>
+
+            {/* MODAL DANH SÁCH MÃ GIẢM GIÁ */}
+            {showDiscountModal && (
+                <>
+                    <div className="modal-backdrop fade show" style={{ zIndex: 1040 }}></div>
+                    <div className="modal fade show d-block" tabIndex="-1" style={{ zIndex: 1050 }}>
+                        <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                            <div className="modal-content border-0 shadow">
+                                <div className="modal-header bg-light">
+                                    <h5 className="modal-title fw-bold" style={{ color: '#0f4f34' }}>
+                                        <i className="fa-solid fa-ticket me-2"></i>Chọn mã giảm giá
+                                    </h5>
+                                    <button type="button" className="btn-close" onClick={() => setShowDiscountModal(false)}></button>
+                                </div>
+                                <div className="modal-body bg-light">
+                                    {availableCodes.length > 0 ? (
+                                        <div className="d-flex flex-column gap-3">
+                                            {availableCodes.map(code => (
+                                                <div key={code.id} className="card border-0 shadow-sm" style={{ borderRadius: '10px' }}>
+                                                    <div className="card-body p-3 d-flex align-items-center">
+                                                        <div className="bg-success text-white d-flex flex-column justify-content-center align-items-center rounded me-3" style={{ minWidth: '70px', height: '70px' }}>
+                                                            <span className="fw-bold fs-5">{code.discountPercentage}%</span>
+                                                            <span style={{ fontSize: '10px' }}>GIẢM</span>
+                                                        </div>
+                                                        <div className="flex-grow-1">
+                                                            <div className="d-flex justify-content-between align-items-start">
+                                                                <h6 className="fw-bold mb-1 border border-success text-success px-2 py-1 rounded" style={{ fontSize: '13px', display: 'inline-block' }}>{code.code}</h6>
+                                                                <button 
+                                                                    className="btn btn-sm btn-success rounded-pill px-3 py-1" 
+                                                                    style={{ fontSize: '12px' }}
+                                                                    onClick={() => handleApplyDiscount(code.code)}
+                                                                >
+                                                                    Dùng ngay
+                                                                </button>
+                                                            </div>
+                                                            <p className="text-muted mb-1 mt-2" style={{ fontSize: '12px' }}>
+                                                                {code.description}
+                                                            </p>
+                                                            <div className="d-flex justify-content-between align-items-center mt-2">
+                                                                <span className="text-danger fw-medium" style={{ fontSize: '11px' }}>
+                                                                    {code.usageLimit ? `Còn lại: ${Math.max(0, code.usageLimit - code.usedCount)} lượt` : 'Vô hạn lượt dùng'}
+                                                                </span>
+                                                                <span className="text-primary" style={{ fontSize: '11px' }}>
+                                                                    {code.minOrderValue > 0 ? `Đơn tối thiểu ${formatVND(code.minOrderValue)}` : 'Áp dụng mọi đơn hàng'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center text-muted my-5">
+                                            <i className="fa-solid fa-box-open fs-1 mb-3 text-light"></i>
+                                            <p>Hiện không có mã giảm giá nào phù hợp cho bạn.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 };

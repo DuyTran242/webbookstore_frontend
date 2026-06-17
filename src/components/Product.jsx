@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { getFavorites, addFavorite, removeFavorite } from '../api/favoriteApi';
 import './Product.css';
 
 // ==========================================
@@ -21,12 +22,61 @@ const ProductCard = ({ product }) => {
     averageRating = Math.round(totalStars / reviewCount);
   }
 
-  const handleLike = (e) => {
-    e.preventDefault(); 
-    e.stopPropagation();
-    alert(`Đã thêm "${product.name}" vào danh sách yêu thích!`);
-  };
+  const [isFavorited, setIsFavorited] = useState(false);
 
+  // Load favorite status on mount and update when favorites change elsewhere
+  useEffect(() => {
+    const fetchFavoriteStatus = async () => {
+      const userSessionStr = localStorage.getItem('userSession');
+      if (userSessionStr) {
+        const user = JSON.parse(userSessionStr);
+        try {
+          const favorites = await getFavorites(user.id);
+          setIsFavorited(favorites.some(fav => fav.id === product.id));
+        } catch (error) {
+          console.error("Lỗi khi tải danh sách yêu thích:", error);
+        }
+      } else {
+        setIsFavorited(false);
+      }
+    };
+
+    fetchFavoriteStatus();
+    
+    // Listen for changes from other components (if we want to keep it)
+    const handleUpdate = () => fetchFavoriteStatus();
+    window.addEventListener('favoritesUpdated', handleUpdate);
+    return () => window.removeEventListener('favoritesUpdated', handleUpdate);
+  }, [product.id]);
+
+  const handleLike = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const userSessionStr = localStorage.getItem('userSession');
+    if (!userSessionStr) {
+      alert("Vui lòng đăng nhập để thêm vào danh sách yêu thích!");
+      // Optionally trigger login modal if there's a global way
+      return;
+    }
+    const user = JSON.parse(userSessionStr);
+
+    try {
+      if (isFavorited) {
+        await removeFavorite(user.id, product.id);
+        setIsFavorited(false);
+        alert(`Sản phẩm "${product.name}" đã được xóa khỏi danh sách yêu thích (DB)!`);
+      } else {
+        await addFavorite(user.id, product.id);
+        setIsFavorited(true);
+        alert(`Đã thêm "${product.name}" vào danh sách yêu thích (DB)!`);
+      }
+      window.dispatchEvent(new Event('favoritesUpdated'));
+    } catch (error) {
+      console.error("Lỗi khi cập nhật yêu thích:", error);
+      alert("Có lỗi xảy ra, vui lòng thử lại sau.");
+    }
+  };
   const handleAddToCart = (e) => {
     e.preventDefault(); 
     e.stopPropagation();
@@ -73,23 +123,23 @@ const ProductCard = ({ product }) => {
           ></div>
 
           {/* Nút Trái Tim */}
-          <button 
-            onClick={handleLike}
-            className="position-absolute bg-white border-0 rounded-circle d-flex justify-content-center align-items-center" 
-            style={{ 
-              top: '10px', 
-              right: isHovered ? '10px' : '-40px',
-              opacity: isHovered ? 1 : 0, 
-              width: '35px', 
-              height: '35px', 
-              zIndex: 2,
-              transition: 'all 0.3s ease',
-              boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-            }}
-            title="Yêu thích"
-          >
-            <i className={`fa-regular fa-heart text-danger ${isHovered ? 'fa-solid' : ''}`}></i>
-          </button>
+            <button 
+              onClick={handleLike}
+              className="position-absolute bg-white border-0 rounded-circle d-flex justify-content-center align-items-center" 
+              style={{ 
+                top: '10px', 
+                right: isHovered ? '10px' : '-40px',
+                opacity: isHovered ? 1 : 0, 
+                width: '35px', 
+                height: '35px', 
+                zIndex: 2,
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+              }}
+              title="Yêu thích"
+            >
+              <i className={`fa-regular fa-heart text-danger ${isFavorited ? 'fa-solid' : ''}`}></i>
+            </button>
 
           {/* Nút Thêm Vào Giỏ */}
           <button 

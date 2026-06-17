@@ -1,14 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { getFavorites, removeFavorite } from '../api/favoriteApi';
 
 const ThongTinTaiKhoan = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tabQuery = searchParams.get('tab');
+
   const fileInputRef = useRef(null);
 
   const sessionString = localStorage.getItem('userSession');
   const userSession = sessionString ? JSON.parse(sessionString) : null;
 
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState(tabQuery || 'profile');
+
+  useEffect(() => {
+    if (tabQuery) {
+      setActiveTab(tabQuery);
+    }
+  }, [tabQuery]);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -34,6 +44,7 @@ const ThongTinTaiKhoan = () => {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [favoriteProducts, setFavoriteProducts] = useState([]);
 
   useEffect(() => {
     if (!userSession) {
@@ -71,6 +82,52 @@ const ThongTinTaiKhoan = () => {
       fetchOrders();
     }
   }, [activeTab]);
+
+  // Load favorite products when component mounts or when user changes
+  useEffect(() => {
+    const fetchFavs = async () => {
+      if (userSession && userSession.id) {
+        try {
+          const data = await getFavorites(userSession.id);
+          setFavoriteProducts(data);
+        } catch (error) {
+          console.error("Error loading favorite products:", error);
+          setFavoriteProducts([]);
+        }
+      }
+    };
+    fetchFavs();
+  }, [userSession]);
+
+  // Listen for favorites updates from other components
+  useEffect(() => {
+    const handler = async () => {
+      if (userSession && userSession.id) {
+        try {
+          const data = await getFavorites(userSession.id);
+          setFavoriteProducts(data);
+        } catch (error) {
+          console.error("Error updating favorite products:", error);
+        }
+      }
+    };
+    window.addEventListener('favoritesUpdated', handler);
+    return () => window.removeEventListener('favoritesUpdated', handler);
+  }, [userSession]);
+
+  const handleRemoveFavorite = async (productId) => {
+    try {
+      if (userSession && userSession.id) {
+        await removeFavorite(userSession.id, productId);
+        setFavoriteProducts(prev => prev.filter(p => p.id !== productId));
+        window.dispatchEvent(new Event('favoritesUpdated'));
+        alert("Sản phẩm đã được xóa khỏi danh sách yêu thích!");
+      }
+    } catch (error) {
+      console.error("Lỗi khi xóa khỏi danh sách yêu thích", error);
+      alert("Có lỗi xảy ra, vui lòng thử lại sau.");
+    }
+  };
 
   const fetchOrders = async () => {
     setLoadingOrders(true);
@@ -413,6 +470,12 @@ const ThongTinTaiKhoan = () => {
                                 <td className="text-muted">Phí vận chuyển:</td>
                                 <td className="text-end">{formatPrice(selectedOrder.shippingFee)}</td>
                               </tr>
+                              {selectedOrder.discount > 0 && (
+                                <tr>
+                                  <td className="text-muted">Giảm giá:</td>
+                                  <td className="text-end text-success fw-bold">-{formatPrice(selectedOrder.discount)}</td>
+                                </tr>
+                              )}
                               <tr className="border-top">
                                 <td className="fw-bold pt-2 fs-6">Tổng cộng:</td>
                                 <td className="text-end fw-bold text-danger fs-5 pt-2">{formatPrice(selectedOrder.totalPrice)}</td>
@@ -432,13 +495,50 @@ const ThongTinTaiKhoan = () => {
           </div>
         );
 
-      case 'wishlist':
-        return (
-          <div className="bg-white p-4 rounded shadow-sm">
-            <h4 className="fw-bold border-bottom pb-3 mb-4">Danh Sách Yêu Thích</h4>
-            <p className="text-muted">Tính năng đang được cập nhật...</p>
-          </div>
-        );
+        case 'wishlist':
+          return (
+            <div className="bg-white p-4 rounded shadow-sm">
+              <h4 className="fw-bold border-bottom pb-3 mb-4">Danh Sách Yêu Thích</h4>
+              {favoriteProducts && favoriteProducts.length > 0 ? (
+                <div className="row g-3">
+                  {favoriteProducts.map(product => (
+                    <div key={product.id} className="col-6 col-md-4 col-lg-3">
+                      <div className="card h-100 position-relative border-0 shadow-sm" style={{ transition: 'transform 0.2s', cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+                        <button 
+                          className="btn btn-light text-danger position-absolute shadow" 
+                          style={{ top: '10px', right: '10px', padding: '0.4rem 0.5rem', borderRadius: '50%', zIndex: 10, width: '35px', height: '35px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRemoveFavorite(product.id);
+                          }}
+                          title="Xóa khỏi danh sách yêu thích"
+                        >
+                          <i className="fa-solid fa-trash-can"></i>
+                        </button>
+                        
+                        <Link to={`/product/${product.id}`} className="text-decoration-none text-dark d-block h-100">
+                          <img src={product.image || 'https://via.placeholder.com/150'}
+                            alt={product.name}
+                            className="card-img-top"
+                            style={{ height: '180px', objectFit: 'contain', backgroundColor: '#f8f9fa' }}
+                          />
+                          <div className="card-body p-3 text-center">
+                            <h6 className="card-title text-truncate fw-bold mb-2" title={product.name}>{product.name}</h6>
+                            <p className="card-text fw-bold text-danger mb-0" style={{ fontSize: '1.1rem' }}>
+                              {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
+                            </p>
+                          </div>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted">Bạn chưa có sản phẩm nào trong danh sách yêu thích.</p>
+              )}
+            </div>
+          );
 
       case 'password':
         return (

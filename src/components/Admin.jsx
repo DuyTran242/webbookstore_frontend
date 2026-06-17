@@ -106,15 +106,6 @@ const Admin = () => {
           </li>
 
           <li 
-            className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${activeTab === 'attributes' ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
-            onClick={() => setActiveTab('attributes')}
-            style={{ cursor: 'pointer' }}
-          >
-            <i className="fa-solid fa-layer-group" style={{ width: '20px', textAlign: 'center' }}></i> 
-            <span style={{ fontSize: '14px' }}>Thuộc tính</span>
-          </li>
-
-          <li 
             className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${(activeTab === 'orders' || activeTab === 'pack_order') ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
             onClick={() => setActiveTab('orders')}
             style={{ cursor: 'pointer' }}
@@ -142,21 +133,21 @@ const Admin = () => {
           </li>
 
           <li 
-            className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${activeTab === 'banners' ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
-            onClick={() => setActiveTab('banners')}
+            className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${activeTab === 'reviews' ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
+            onClick={() => setActiveTab('reviews')}
             style={{ cursor: 'pointer' }}
           >
-            <i className="fa-regular fa-image" style={{ width: '20px', textAlign: 'center' }}></i> 
-            <span style={{ fontSize: '14px' }}>Banner</span>
+            <i className="fa-regular fa-comment-dots" style={{ width: '20px', textAlign: 'center' }}></i> 
+            <span style={{ fontSize: '14px' }}>Đánh giá</span>
           </li>
 
           <li 
-            className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${activeTab === 'posts' ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
-            onClick={() => setActiveTab('posts')}
+            className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${activeTab === 'coupons' ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
+            onClick={() => setActiveTab('coupons')}
             style={{ cursor: 'pointer' }}
           >
-            <i className="fa-regular fa-newspaper" style={{ width: '20px', textAlign: 'center' }}></i> 
-            <span style={{ fontSize: '14px' }}>Bài viết</span>
+            <i className="fa-solid fa-ticket" style={{ width: '20px', textAlign: 'center' }}></i> 
+            <span style={{ fontSize: '14px' }}>Mã giảm giá</span>
           </li>
 
           <li 
@@ -187,15 +178,6 @@ const Admin = () => {
           </li>
 
           <li 
-            className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${activeTab === 'coupons' ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
-            onClick={() => setActiveTab('coupons')}
-            style={{ cursor: 'pointer' }}
-          >
-            <i className="fa-solid fa-ticket" style={{ width: '20px', textAlign: 'center' }}></i> 
-            <span style={{ fontSize: '14px' }}>Mã giảm giá</span>
-          </li>
-
-          <li 
             className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${activeTab === 'brands' ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
             onClick={() => setActiveTab('brands')}
             style={{ cursor: 'pointer' }}
@@ -205,12 +187,30 @@ const Admin = () => {
           </li>
 
           <li 
-            className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${activeTab === 'reviews' ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
-            onClick={() => setActiveTab('reviews')}
+            className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${activeTab === 'attributes' ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
+            onClick={() => setActiveTab('attributes')}
             style={{ cursor: 'pointer' }}
           >
-            <i className="fa-regular fa-comment-dots" style={{ width: '20px', textAlign: 'center' }}></i> 
-            <span style={{ fontSize: '14px' }}>Đánh giá</span>
+            <i className="fa-solid fa-layer-group" style={{ width: '20px', textAlign: 'center' }}></i> 
+            <span style={{ fontSize: '14px' }}>Thuộc tính</span>
+          </li>
+
+          <li 
+            className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${activeTab === 'banners' ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
+            onClick={() => setActiveTab('banners')}
+            style={{ cursor: 'pointer' }}
+          >
+            <i className="fa-regular fa-image" style={{ width: '20px', textAlign: 'center' }}></i> 
+            <span style={{ fontSize: '14px' }}>Banner</span>
+          </li>
+
+          <li 
+            className={`px-3 py-2 mb-1 rounded d-flex align-items-center gap-3 ${activeTab === 'posts' ? 'bg-light fw-bold text-dark' : 'text-secondary'}`} 
+            onClick={() => setActiveTab('posts')}
+            style={{ cursor: 'pointer' }}
+          >
+            <i className="fa-regular fa-newspaper" style={{ width: '20px', textAlign: 'center' }}></i> 
+            <span style={{ fontSize: '14px' }}>Bài viết</span>
           </li>
         </ul>
       </aside>
@@ -218,11 +218,7 @@ const Admin = () => {
       {/* MAIN CONTENT */}
       <main className="admin-main bg-light w-100" style={{ minHeight: '100vh' }}>
         {/* TOP HEADER */}
-        <header className="admin-header shadow-sm d-flex justify-content-between align-items-center px-4 py-3 bg-white">
-          <div className="search-bar position-relative w-25">
-            <input type="text" className="form-control rounded-pill bg-light border-0 ps-4" placeholder="Tìm kiếm ở đây..." />
-            <i className="fa-solid fa-magnifying-glass position-absolute text-muted" style={{ top: '10px', left: '15px' }}></i>
-          </div>
+        <header className="admin-header shadow-sm d-flex justify-content-end align-items-center px-4 py-3 bg-white">
           
           <div className="header-actions d-flex align-items-center gap-4">
             <i className="fa-regular fa-bell fs-5 text-muted pointer"></i>

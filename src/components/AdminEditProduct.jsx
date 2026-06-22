@@ -127,7 +127,7 @@ const AdminEditProduct = ({ setActiveTab, productId }) => {
           </div>
            <div className="col-md-3">
             <label className="form-label">Tồn kho</label>
-            <input type="number" className="form-control" name="stockQuantity" value={formData.stockQuantity} onChange={handleInputChange} required />
+            <input type="number" className="form-control bg-light" name="stockQuantity" value={formData.stockQuantity} readOnly disabled />
           </div>
           <div className="col-md-3">
             <label className="form-label">ID Danh mục</label>

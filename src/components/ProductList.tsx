@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import './ProductList.css';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getFavorites, addFavorite, removeFavorite } from '../api/favoriteApi';
+import axios from 'axios';
+import Swal from 'sweetalert2';
+import { CartContext } from './CartContext';
+import { useContext } from 'react';
 
-// Import ảnh đối tác tĩnh
 import com1 from '../img/company1.jpg';
 import com2 from '../img/company2.png';
 import com3 from '../img/company3.jpg';
@@ -22,14 +25,12 @@ interface ProductImage {
   isPrimary: number;
 }
 
-// Cập nhật kiểu dữ liệu của Sản phẩm khớp với JSON Backend trả về
 interface Product {
   id: number;
   name: string;
   price: number;
-  images: ProductImage[]; // Mảng chứa ảnh Base64
+  images: ProductImage[];
 
-  // Các trường optional (nếu sau này DB có thêm)
   oldPrice?: number;
   badgeText?: string;
   badgeType?: 'teal' | 'red';
@@ -37,6 +38,7 @@ interface Product {
 
 const ProductItem: React.FC<{ product: Product; formatPrice: (price: number) => string }> = ({ product, formatPrice }) => {
   const [isFavorited, setIsFavorited] = useState(false);
+  const { fetchCartItems } = useContext(CartContext);
 
   useEffect(() => {
     const fetchFavoriteStatus = async () => {
@@ -87,6 +89,41 @@ const ProductItem: React.FC<{ product: Product; formatPrice: (price: number) => 
     }
   };
 
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const userSessionStr = localStorage.getItem('userSession');
+    if (!userSessionStr) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Chưa đăng nhập',
+        text: 'Vui lòng đăng nhập để thêm vào giỏ hàng!'
+      });
+      return;
+    }
+
+    const user = JSON.parse(userSessionStr);
+    try {
+      await axios.post('http://localhost:8080/api/cart/add', {
+        userId: user.id,
+        productId: product.id,
+        quantity: 1
+      });
+
+      Swal.fire({ icon: 'success', title: 'Thành công!', text: 'Đã thêm sản phẩm vào giỏ hàng.', timer: 1500, showConfirmButton: false });
+
+
+      fetchCartItems();
+      window.dispatchEvent(new Event('cartUpdated'));
+
+    } catch (error: any) {
+      console.error("Lỗi thêm vào giỏ hàng:", error);
+      const errorMsg = error.response?.data?.error || error.response?.data || 'Có lỗi xảy ra, vui lòng thử lại!';
+      Swal.fire({ icon: 'error', title: 'Thất bại', text: errorMsg });
+    }
+  };
+
   const primaryImageObj = product.images?.find(img => img.isPrimary === 1) || product.images?.[0];
   const imageUrl = primaryImageObj ? primaryImageObj.imageUrl : '';
 
@@ -124,11 +161,15 @@ const ProductItem: React.FC<{ product: Product; formatPrice: (price: number) => 
         </div>
 
         <div className="d-flex justify-content-center align-items-center mt-3">
-          <button className="btn btn-add-to-cart" style={{ backgroundColor: '#28a745', borderColor: '#28a745' }}>
-            ADD TO CART
+          <button
+            className="btn btn-add-to-cart"
+            style={{ backgroundColor: '#28a745', borderColor: '#28a745', color: '#fff', fontSize: '13px', padding: '6px 12px' }}
+            onClick={handleAddToCart}
+          >
+            <i className="fa-solid fa-cart-plus me-1"></i> Thêm vào giỏ
           </button>
-          <i 
-            className={`fa-heart heart-icon ms-3 fs-5 ${isFavorited ? 'fa-solid text-danger' : 'fa-regular'}`} 
+          <i
+            className={`fa-heart heart-icon ms-3 fs-5 ${isFavorited ? 'fa-solid text-danger' : 'fa-regular'}`}
             title="Thêm vào yêu thích"
             onClick={handleLike}
             style={{ cursor: 'pointer' }}
@@ -141,27 +182,22 @@ const ProductItem: React.FC<{ product: Product; formatPrice: (price: number) => 
 };
 
 const ProductList: React.FC = () => {
-  // [THÊM MỚI]: Lấy params từ URL
+
   const [searchParams] = useSearchParams();
   const categoryId = searchParams.get('categoryId');
 
-  // State lưu dữ liệu sản phẩm lấy từ API
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // State xử lý phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  // Gọi API lấy dữ liệu từ Spring Boot khi Component Mount hoặc khi categoryId thay đổi
   useEffect(() => {
-    setLoading(true); // Hiển thị loading mỗi khi đổi danh mục
-    
-    // Cấu hình URL API động dựa trên việc có categoryId hay không
+    setLoading(true);
+
     let apiUrl = 'http://localhost:8080/api/products';
     if (categoryId) {
-      // *LƯU Ý: Backend Spring Boot cần hỗ trợ query param này (VD: @RequestParam("categoryId"))
-      // Hoặc nếu Backend cấu hình endpoint khác, hãy sửa lại thành: `http://localhost:8080/api/categories/${categoryId}/products`
+
       apiUrl = `http://localhost:8080/api/products?categoryId=${categoryId}`;
     }
 
@@ -175,13 +211,13 @@ const ProductList: React.FC = () => {
       .then(data => {
         setProducts(data);
         setLoading(false);
-        setCurrentPage(1); // [THÊM MỚI]: Reset về trang 1 khi danh mục thay đổi
+        setCurrentPage(1);
       })
       .catch(error => {
         console.error("Lỗi khi gọi API lấy sản phẩm:", error);
         setLoading(false);
       });
-  }, [categoryId]); // [THÊM MỚI]: Dependency array lắng nghe sự thay đổi của categoryId
+  }, [categoryId]);
 
   // Logic tính toán phân trang
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -193,7 +229,6 @@ const ProductList: React.FC = () => {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " đ";
   };
 
-  // Khởi tạo Bootstrap Carousel cho phần Đối tác
   useEffect(() => {
     const bootstrap = (window as any).bootstrap;
     if (bootstrap) {
